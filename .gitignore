@@ -1,0 +1,7 @@
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Claude Code（個人の権限設定）
+.claude/settings.local.json
