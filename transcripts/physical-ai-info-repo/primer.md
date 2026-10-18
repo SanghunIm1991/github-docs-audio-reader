@@ -101,4 +101,4 @@ VLA は、VLM を土台にして、出力にロボットの動作、例えば関
 
 ## 出典について
 
-この原稿は、[physical-ai-info-repo の「フィジカルAI 入門」](https://github.com/SanghunIm1991/physical-ai-info-repo/blob/main/primer.md)を、聞くために要約・意訳したものです。原文と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
+この原稿は、SanghunIm1991 さんの [physical-ai-info-repo の「フィジカルAI 入門」](https://github.com/SanghunIm1991/physical-ai-info-repo/blob/main/primer.md)を、聞くために要約・意訳したものです。元にしたのは、[2026年10月17日の版](https://github.com/SanghunIm1991/physical-ai-info-repo/blob/0a0b649caef1480e9933dae7097b408010af1e2f/primer.md)です。原文と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
