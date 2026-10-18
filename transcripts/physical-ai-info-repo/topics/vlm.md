@@ -146,7 +146,7 @@ VLM はロボットの認識と計画を、VLA はそこから動作の出力ま
 
 今では、NVIDIA の Cosmos 3 と Isaac GR00T が、オープンソースのまま実用の段階に入っています。一方、openpi、OpenVLA、SmolVLA は、研究段階のオープンソースです。
 
-製品では、Gemini Robotics が、計画を立てる VLM の ER 2 と、動作を受け持つ VLA の Gemini Robotics 2 を組み合わせる形をとっています。ただし VLA の方は、まだ限られたパートナー向けの段階です。
+製品では、計画を立てる VLM の Gemini Robotics ER 2 が、開発者が「道具」として登録した VLA などに、実際の動作を任せる形をとっています。一方、Google DeepMind の VLA である Gemini Robotics 2 は、まだ限られたパートナー向けの段階です。
 
 以上で、VLM と VLA の話を終わります。
 
