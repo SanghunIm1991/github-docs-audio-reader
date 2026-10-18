@@ -32,8 +32,11 @@ def to_blocks(md):
             HEADINGS.add(re.sub(r"^#+\s*", "", raw.strip()))
         lines = []
         for line in raw.splitlines():
-            line = re.sub(r"^#+\s*", "", line)
-            line = re.sub(r"^\s*(?:[-*]|\d+\.)\s+", "", line)
+            if line.lstrip().startswith("#"):
+                # 見出しの番号（「1. 」等）は箇条書きの記号として外さない
+                line = re.sub(r"^\s*#+\s*", "", line)
+            else:
+                line = re.sub(r"^\s*(?:[-*]|\d+\.)\s+", "", line)
             line = line.replace("**", "")
             lines.append(line.strip())
         text = "\n".join(l for l in lines if l)
