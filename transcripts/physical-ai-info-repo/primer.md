@@ -98,3 +98,7 @@ VLA は、VLM を土台にして、出力にロボットの動作、例えば関
 用語の位置づけをおさらいすると、LLM は主に計画を、VLM は認識と計画を、VLA は動作を作る部分を受け持ちます。ロス・ツーは部品どうしをつなぐ土台で、アール・エー・アイは、LLM や VLM をロス・ツーのロボットにつなぐ枠組みです。
 
 以上で、フィジカルAI入門の話を終わります。
+
+## 出典について
+
+この原稿は、[physical-ai-info-repo の「フィジカルAI 入門」](https://github.com/SanghunIm1991/physical-ai-info-repo/blob/main/primer.md)を、聞くために要約・意訳したものです。原文と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
