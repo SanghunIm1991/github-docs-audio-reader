@@ -3,5 +3,8 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# Python のキャッシュ
+__pycache__/
+
 # Claude Code（個人の権限設定）
 .claude/settings.local.json

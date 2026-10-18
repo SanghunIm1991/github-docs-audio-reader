@@ -21,7 +21,7 @@ TRANSCRIPTS = ROOT / "transcripts"
 
 PATTERN = re.compile(r"`([^`]+)`")
 COMMIT = re.compile(r"原文のコミット:\s*([0-9a-f]{7,40})")
-STATUS_ORDER = ["原文が更新", "未作成", "最新"]
+STATUS_ORDER = ["判定できない", "原文が更新", "未作成", "最新"]
 
 
 def read_sources():
@@ -34,7 +34,8 @@ def read_sources():
             common += PATTERN.findall(line)
         elif section == "リポジトリ" and line.startswith("|"):
             cells = [c.strip() for c in line.strip("|").split("|")]
-            if cells[0] in ("リポジトリ", "") or set(cells[0]) <= set("-"):
+            # 見出しの行・区切りの行・列が足りない行は飛ばす（セルの中に「|」は書かない決まり）
+            if len(cells) < 3 or cells[0] in ("リポジトリ", "") or set(cells[0]) <= set("-"):
                 continue
             repos.append((cells[0], PATTERN.findall(cells[1]), PATTERN.findall(cells[2])))
     return common, repos
@@ -71,18 +72,25 @@ def classify(repo, repo_dir, path):
         return "原文が更新", "原稿に原文のコミットの記録がない"
     recorded = m.group(1)
     # 記録したコミットからの差分が無ければ、原稿は原文に追いついている
-    changed = subprocess.run(["git", "-C", str(repo_dir), "diff", "--quiet", recorded, "HEAD", "--", path])
+    changed = subprocess.run(["git", "-C", str(repo_dir), "diff", "--quiet", recorded, "HEAD", "--", path],
+                             capture_output=True)
     if changed.returncode == 0:
         return "最新", ""
+    if changed.returncode != 1:  # 1 は差分あり。それ以外は、記録したコミットが複製に無い等のエラー
+        return "判定できない", f"記録したコミット {recorded[:7]} が複製に見つからない（浅い複製なら、深く複製し直す）"
     latest = git(repo_dir, "log", "-1", "--format=%h %cs", "--", path).strip()
     return "原文が更新", f"原稿は {recorded[:7]}、原文の最新は {latest}"
 
 
 def main():
+    # Windows の既定（cp932）だと文字化けするため。--help やエラーの表示にも効くよう、最初に切り替える
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+    if sys.version_info < (3, 13):
+        raise SystemExit("Python 3.13 以上で実行してください（PurePosixPath.full_match を使うため）: py -3.13 tools/list_candidates.py")
     parser = argparse.ArgumentParser(description="原稿を作る候補を洗い出す")
     parser.add_argument("--clones", required=True, type=Path, help="各リポジトリを複製したフォルダ")
     args = parser.parse_args()
-    sys.stdout.reconfigure(encoding="utf-8")  # Windows の既定（cp932）だと文字化けするため
 
     common, repos = read_sources()
     for repo, include, exclude in repos:
@@ -93,8 +101,9 @@ def main():
             continue
         head = git(repo_dir, "log", "-1", "--format=%h %cs").strip()
         print(f"原文の HEAD: {head}")
-        files = [f for f in git(repo_dir, "ls-files").splitlines()
-                 if matches(f, include) and not matches(f, common + exclude)]
+        # 日本語のファイル名が引用符と8進数の形にならないよう、quotePath を切り、区切りを NUL にする
+        listed = git(repo_dir, "-c", "core.quotePath=false", "ls-files", "-z").split("\0")
+        files = [f for f in listed if f and matches(f, include) and not matches(f, common + exclude)]
         rows = []
         for f in files:
             status, note = classify(repo, repo_dir, f)
