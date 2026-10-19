@@ -1,8 +1,9 @@
 """聞くための原稿（transcripts/ の .md）から、コピペ用の素のテキスト（plain/ の .txt）を作る。
 
 - 先頭のHTMLコメント（記録）を除き、見出しの「#」、強調の「**」、箇条書きの記号、リンクの URL を外す。
-- 原稿ごとに、全文の1ファイルと、指定した文字数以下に分けたファイル（-01, -02, ...）を作る。
-  全文が上限に収まるときは、分けたファイルは作らない。見出しには、読み上げで区切れるように「。」を足す。
+- 原稿ごとに、全文の1ファイルを作る。見出しには、読み上げで区切れるように「。」を足す。
+- --max-chars を付けたときだけ、その文字数以下に分けたファイル（-01, -02, ...）も作る。
+  全文が上限に収まるときは、分けたファイルは作らない。
 - 出典は、全文と各パートの末尾に入れる（CC BY 4.0 の表示のため）。URL は全文の末尾の記録の欄にだけ書く。
 
 使い方: py -3.13 tools/make_plain.py [--max-chars 3000]
@@ -108,6 +109,8 @@ def build(md_path, max_chars):
     full_path = out_dir / f"{rel.name}.txt"
     full_path.write_text(full, encoding="utf-8", newline="\n")
     written.append((full_path, len(full)))
+    if max_chars is None:
+        return written  # 文字数の上限を決めないときは、全文だけを作る
 
     # 各パートの見出し・続きの案内・出典のぶんを差し引いた文字数で、本文を分ける
     overhead = len(f"{title}（その00／全00）") + len("（その00に続きます）") + len(footer) + 8
@@ -131,7 +134,7 @@ def build(md_path, max_chars):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--max-chars", type=int, default=3000, help="1パートの文字数の上限（既定: 3000）")
+    parser.add_argument("--max-chars", type=int, help="1パートの文字数の上限（付けないときは、パートを作らない）")
     args = parser.parse_args()
 
     for old in OUT.rglob("*.txt"):
