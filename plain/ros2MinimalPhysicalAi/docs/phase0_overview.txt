@@ -416,6 +416,8 @@ tf2 を使うノードの自作と、RViz2 を使った発展は、保留中の�
 
 この原稿は、SanghunIm1991 さんの ros2MinimalPhysicalAi の「フェーズ0 手順書: ROS2の概要と全体像」を、聞くために要約・意訳したものです。図の phase0_layers.svg と phase0_goal.svg は、言葉で説明しました。元にしたのは、2026年10月17日の版です。原文の文章と図と同じく、クリエイティブ・コモンズ 表示 4.0 国際ライセンスで提供します。
 
+原稿の中に原文の表記のまま書いたコマンドは、原文では Apache License 2.0 の対象です。ライセンスの全文は、原文のリポジトリの LICENSE-APACHE-2.0 にあります。
+
 （ここから下は、出典の記録です。読み上げは要りません）
 
 https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/phase0_overview.md
@@ -423,3 +425,5 @@ https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/phase0
 https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/phase0_goal.svg
 https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/e21773ba3dfe6808e69fde552d6a3304f3b2c958/docs/phase0_overview.md
 https://creativecommons.org/licenses/by/4.0/deed.ja
+https://www.apache.org/licenses/LICENSE-2.0
+https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0

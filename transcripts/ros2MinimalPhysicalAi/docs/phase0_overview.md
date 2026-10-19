@@ -428,3 +428,5 @@ tf2 を使うノードの自作と、RViz2 を使った発展は、保留中の�
 原文の手順書によれば、ROS2、DDS、周辺の OSS、業界の活用例の事実関係は、原文の10節に挙げた公式のページと記事に基づいています。ROS 2 の公式ドキュメントは、CC BY 4.0 です。文章と構成は、原文の作者が自分の言葉でまとめたもので、逐語の転載ではありません。また、原文の LICENSE によれば、図も文章と同じく CC BY 4.0 の対象です。
 
 この原稿は、SanghunIm1991 さんの [ros2MinimalPhysicalAi の「フェーズ0 手順書: ROS2の概要と全体像」](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/phase0_overview.md)を、聞くために要約・意訳したものです。図の [phase0_layers.svg](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/phase0_layers.svg) と [phase0_goal.svg](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/phase0_goal.svg) は、言葉で説明しました。元にしたのは、[2026年10月17日の版](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/e21773ba3dfe6808e69fde552d6a3304f3b2c958/docs/phase0_overview.md)です。原文の文章と図と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
+
+原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。
