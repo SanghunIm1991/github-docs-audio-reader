@@ -86,7 +86,7 @@ STEP 2 の制御からは「最初のゴールに到達」、STEP 3 の評価か
 
 矢印は、target_generator から nn_controller へ「目標速度」、nn_controller から gz_plant へ「ペダル」、その逆向きに gz_plant から nn_controller へ「速度」です。さらに、gz_plant から Gazebo とブリッジへ「トルク」、その逆向きに「オドメトリ」が戻ります。
 
-枠の中の下の段、nn_controller のすぐ下には、pi_controller の箱があります。PI制御で、引数で NN と入れ替えるもので、フェーズ5-2 で作ります。この箱には矢印がつながっていません。SVG では、nn_controller と pi_controller の2つの箱だけが同じ色で、ほかのノードと色が分けてあります。
+枠の中の下の段、nn_controller のすぐ下には、pi_controller の箱があります。PI制御で、引数で NN と入れ替えるもので、フェーズ5-2 で作ります。この箱には矢印がつながっていません。SVG では、nn_controller と pi_controller の2つの箱が同じ色で、ほかの箱とは色が分けてあります。
 
 枠の上には、ROS2 の外のものが2つあります。「強化学習で学習」の箱は、Gymnasium と SB3 を使い、ROS2 の外で行うもので、フェーズ7-0 から7-4 で学びます。そこから「学習」の矢印で、「学習済みの重み」の箱につながります。重みは .npz のファイルで、numpy だけで読み、フェーズ7-4 で作ります。重みの箱からは、nn_controller へ点線の矢印が出ています。
 

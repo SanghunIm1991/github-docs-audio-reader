@@ -4,7 +4,7 @@
 
 想定する環境は、WSL2 と Ubuntu 24.04 と ROS2 Jazzy で、環境構築の手順書を終えていることが前提です。所要時間の目安は1コマから2コマです。このフェーズは言語に依存せず、Python と C++ の区別はありません。
 
-原文には、位置づけと注意の囲みがあります。この手順書のコマンドは、2026年9月21日に、すべて実機で実行して動きを確かめています。ただし、出力の例は作者の知識に基づくもので、表示が細部で違う場合は実機を優先します。公式のページ docs.ros.org はボット対策で本文を取得できず、一語ずつの照合はできていません。文章と構成は作者の言葉で書いたものですが、コマンドの例の値、例えば亀に送る速度や、亀を出す座標、回す角度などは、公式のチュートリアルの例と同じものを含みます。公式のドキュメントは CC BY 4.0 です。また、期待する結果に載せた型の定義のうち、turtlesim の型は turtlesim パッケージのもので BSD License、geometry_msgs の型は common_interfaces のもので Apache License 2.0 です。
+原文には、位置づけと注意の囲みがあります。この手順書のコマンドは、2026年9月21日に、すべて実機で実行して動きを確かめています。ただし、コマンドと出力の例は、筆者である Claude の知識に基づくもので、表示が細部で違う場合は実機を優先します。公式のページ docs.ros.org はボット対策で本文を取得できず、一語ずつの照合はできていません。文章と構成は作者の言葉で書いたものですが、コマンドの例の値、例えば亀に送る速度や、亀を出す座標、回す角度などは、公式のチュートリアルの例と同じものを含みます。公式のドキュメントは CC BY 4.0 です。また、期待する結果に載せた型の定義のうち、turtlesim の型は turtlesim パッケージのもので BSD License、geometry_msgs の型は common_interfaces のもので Apache License 2.0 です。
 
 この原稿では、公式のチュートリアルと同じ値のコマンドの行や、型の定義、ツールの表示は書き写さず、何をするか、何が表示されるかを言葉で説明します。
 
@@ -58,7 +58,7 @@ turtlesim や rqt は、WSLg を通して、Windows の側にウィンドウが�
 
 4行目。Package 'turtlesim' not found の場合は、1-1節の導入が終わっていません。ros2 pkg executables turtlesim で確かめます。
 
-これらは、どれも読み取りか、自分の PC の中でのプロセスの起動で、外部との通信や設定の変更はありません。ただし、wsl --update は Microsoft の公式の更新で、Windows の側の変更を伴うので、実行するかは自分で判断します。出力の例とエラーの文言は作者の知識に基づくもので、実機の表示が違う場合は、実機を優先します。
+これらは、どれも読み取りか、自分の PC の中でのプロセスの起動で、外部との通信や設定の変更はありません。ただし、wsl --update は Microsoft の公式の更新で、Windows の側の変更を伴うので、実行するかは自分で判断します。出力の例とエラーの文言は筆者の知識に基づくもので、実機の表示が違う場合は、実機を優先します。
 
 1-3. 環境変数を書き足す。
 
@@ -124,7 +124,7 @@ Action Servers には、/turtle1/rotate_absolute の RotateAbsolute 型があり
 
 課題1 は、/turtlesim の Subscribers に /turtle1/cmd_vel が、Publishers に /turtle1/pose があることを確かめることです。
 
-次に、ノードの名前の付け替え、remap も試します。T1 の turtlesim を止めて、名前を変えて起動し直します。T1 では、ros2 run turtlesim turtlesim_node の後に、--ros-args --remap __node:=my_turtle を付けて実行し、T3 で ros2 node list を実行します。--ros-args より後ろは、プログラムではなく ROS2 に向けた指定です。--remap __node:=my_turtle は、ノードの名前、つまり __node を my_turtle に付け替える、という意味になります。
+次に、ノードの名前の付け替え、remap も試します。T1 の turtlesim を止めて、名前を変えて起動し直します。T1 では、turtlesim_node を、--ros-args の後に、ノードの名前を my_turtle に付け替える remap の指定を付けて起動し、T3 で ros2 node list を実行します。--ros-args より後ろは、プログラムではなく ROS2 に向けた指定です。remap の指定は、ノードの名前を表す __node を、my_turtle に付け替える、という意味です。
 
 期待する結果は、ノードの一覧の /turtlesim が /my_turtle に置き換わることです。一覧は /my_turtle と /teleop_turtle になります。起動のログも、/my_turtle というノード名で起動した、という内容になります。亀のウィンドウの動きは、何も変わりません。
 
@@ -150,7 +150,7 @@ topic list -t では、トピックの名前と、角括弧に入った型が、
 
 topic info /turtle1/cmd_vel では、型が geometry_msgs/msg/Twist、Publisher の数が1、Subscription の数が1 と表示されます。Publisher の1 は teleop、つまり /teleop_turtle で、Subscription の1 は turtlesim です。teleop を止めると、Publisher の数は0 になります。
 
-interface show で表示される Twist 型の定義は、自由な空間での速度を、直進の部分と回転の部分に分けて表す、という説明のコメントで始まります。中身は2つのフィールドで、linear と angular です。どちらも Vector3 という型で、それぞれ float64 の x、y、z を持ちます。
+interface show で表示される Twist 型の定義は、1行の説明のコメントで始まります。中身は2つのフィールドで、linear と angular です。どちらも Vector3 という型で、それぞれ float64 の x、y、z を持ちます。
 
 topic echo /turtle1/pose では、x、y、theta、linear_velocity、angular_velocity の5つの値が、ハイフン3つの区切りの行を挟みながら、繰り返し表示されます。初めは、x と y が約5.54、ほかは0 です。亀が止まっていても、同じ値を流し続けます。状態を定期的に配信しているからです。矢印のキーで亀を動かすと、x、y、theta の値が変わります。
 
@@ -188,7 +188,7 @@ service list -t では、/clear、/kill、/reset、/spawn、そして /turtle1/s
 
 service type /clear では、std_srvs/srv/Empty と表示されます。
 
-interface show turtlesim/srv/Spawn で表示される Spawn 型の定義は、ハイフン3つの行で、上と下の2つに分かれています。上は要求、つまり Request で、float32 の x、y、theta と、string の name です。name には、空にすれば一意の名前を作って返す、という注記があります。下は応答、つまり Response で、string の name だけです。サービスの型は、この要求と応答の組です。
+interface show turtlesim/srv/Spawn で表示される Spawn 型の定義は、ハイフン3つの行で、上と下の2つに分かれています。上は要求、つまり Request で、float32 の x、y、theta と、string の name です。name の行には、注記のコメントが付いています。下は応答、つまり Response で、string の name だけです。サービスの型は、この要求と応答の組です。
 
 service call で /clear を呼ぶと、要求を送ったという行と、空の要求の表示が出て、続いて応答として、空の応答の表示が出ます。画面の軌跡、つまり白い線が消えます。/clear の型の Empty は、要求にも応答にも中身がありません。応答は空で、終わったことだけが返ります。
 
@@ -204,9 +204,9 @@ service call で /spawn を呼ぶと、要求として x が2.0、y が2.0、the
 
 1つ目は、ros2 param list で、パラメータの一覧を表示します。
 
-2つ目は、ros2 param get /turtlesim background_r で、背景の色の赤の成分を読みます。
+2つ目は、ros2 param get で、/turtlesim の background_r、つまり背景の色の赤の成分を読みます。
 
-3つ目は、ros2 param set /turtlesim background_r 150 で、赤の成分を150 にします。背景の色が変わります。
+3つ目は、ros2 param set で、/turtlesim の background_r を150 にします。背景の色が変わります。
 
 4つ目は、ros2 param dump /turtlesim で、今の設定を YAML で出力します。
 
@@ -216,7 +216,7 @@ param get では、整数の値が69 だと表示されます。param set では
 
 param dump の出力は YAML の形式で、フェーズ3-3 の5-4節で、起動するときに YAML でパラメータを与えるときの書式の見本になります。background_r を150 に変えた後の、param dump /turtlesim の期待する結果は、こうです。一番上に /turtlesim の行があり、その下に ros__parameters の行、さらにその下に、パラメータの名前と値の組が並びます。background_b が255、background_g が86、background_r が150、holonomic が false。続いて qos_overrides の項があり、/parameter_events の publisher について、depth が1000、durability が volatile、history が keep_last、reliability が reliable と、入れ子で並びます。最後に、use_sim_time が false です。
 
-読み方は4つです。1つ目。先頭の /turtlesim が対象のノードの名前で、その下の ros__parameters に、パラメータの名前と値が並びます。ノードの名前から始まるこの階層が、フェーズ3 で使うパラメータの YAML の書式そのものです。2つ目。background の r、g、b、つまり背景の色は、set で変えた値が反映されています。use_sim_time は、シミュレーションの時刻を使うかどうかの共通のパラメータで、ここでは false です。3つ目。qos_overrides の項は、そのノードが使うトピックの通信の品質、QoS の設定の値で、次の補足で説明します。4つ目。出力の例は作者の知識に基づくもので、パラメータの種類、順序、値は、実機で違うことがあります。例えば holonomic があるかどうかです。実機の出力を優先します。
+読み方は4つです。1つ目。先頭の /turtlesim が対象のノードの名前で、その下の ros__parameters に、パラメータの名前と値が並びます。ノードの名前から始まるこの階層が、フェーズ3 で使うパラメータの YAML の書式そのものです。2つ目。background の r、g、b、つまり背景の色は、set で変えた値が反映されています。use_sim_time は、シミュレーションの時刻を使うかどうかの共通のパラメータで、ここでは false です。3つ目。qos_overrides の項は、そのノードが使うトピックの通信の品質、QoS の設定の値で、次の補足で説明します。4つ目。出力の例は筆者の知識に基づくもので、パラメータの種類、順序、値は、実機で違うことがあります。例えば holonomic があるかどうかです。実機の出力を優先します。
 
 ここで、QoS についての軽い補足があります。QoS、Quality of Service は、トピックの通信の信頼性、過去のデータを覚えておくか、キューの深さなどを決める設定で、Publisher と Subscriber がそれぞれ持ちます。上の qos_overrides に出ている項目の意味は、項目と意味の2列の表で、3行あります。
 
@@ -246,7 +246,7 @@ Publisher の側と Subscriber の側の QoS がかみ合わないと、エラ�
 
 action info では、アクションの名前の後に、アクションのクライアントが1つで /teleop_turtle、アクションのサーバが1つで /turtlesim、と表示されます。
 
-interface show で表示される RotateAbsolute 型の定義は、ハイフン3つの行で、3つに区切られています。上から、ゴール、つまり目標が、ラジアンで表した望む向きの float32 の theta。結果が、初めの位置からの回転の角度の float32 の delta。そしてフィードバック、つまり途中経過が、残りの回転の角度の float32 の remaining です。
+interface show で表示される RotateAbsolute 型の定義は、ハイフン3つの行で、3つに区切られています。上から、ゴール、つまり目標の float32 の theta、結果の float32 の delta、そしてフィードバック、つまり途中経過の float32 の remaining で、それぞれに説明のコメントが付いています。theta は向きの目標で、remaining は残りの回転の角度です。
 
 send_goal では、まず、アクションのサーバが使えるようになるのを待っている、という行が出ます。続いて、theta が1.57 のゴールを送ったこと、ゴールが受け付けられて ID が付いたことが表示されます。その後、Feedback の見出しと remaining の値の組が、何度も流れます。remaining は、約1.55、約1.54と、少しずつ減っていきます。実際には、もっと多くの行が流れます。最後に、Result の見出しと delta の値、つまり約マイナス1.55 が表示され、ゴールが SUCCEEDED の状態で終わった、と表示されます。
 

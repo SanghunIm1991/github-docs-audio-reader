@@ -304,7 +304,7 @@ ROS_DOMAIN_ID。同じネットワークの上で、複数の ROS2 のシステ�
 
 これらの箱の間の矢印は、次のとおりです。target_generator から nn_controller へ「目標速度」。nn_controller から gz_plant へ「ペダル」。その逆向きに、gz_plant から nn_controller へ「速度」。gz_plant から Gazebo とブリッジへ「トルク」。その逆向きに、Gazebo とブリッジから gz_plant へ「オドメトリ」。つまり、制御器とプラントの間、プラントと Gazebo の間は、それぞれ行きと帰りの2本の矢印でつながっています。
 
-枠の中の下の段、nn_controller のすぐ下には、もう1つの箱、pi_controller があります。PI制御で、引数で NN と入れ替える、と書かれています。フェーズ5-2 で作ります。この箱には、矢印がつながっていません。箱の説明のとおり、nn_controller と入れ替えて使う部品です。SVG では、nn_controller と pi_controller の2つの箱だけが同じ色で、ほかのノードの箱と色が分けてあります。
+枠の中の下の段、nn_controller のすぐ下には、もう1つの箱、pi_controller があります。PI制御で、引数で NN と入れ替える、と書かれています。フェーズ5-2 で作ります。この箱には、矢印がつながっていません。箱の説明のとおり、nn_controller と入れ替えて使う部品です。SVG では、nn_controller と pi_controller の2つの箱が同じ色で、ほかの箱とは色が分けてあります。
 
 点線の枠の上、図の一番上の段には、ROS2 の外のものが2つあります。左の箱は「強化学習で学習」で、Gymnasium と SB3、つまり Stable-Baselines3 を使い、ROS2 の外で行います。フェーズ7-0 から7-4 で学びます。この箱から右へ「学習」という矢印が出て、「学習済みの重み」の箱につながります。重みは .npz のファイルで、numpy だけで読みます。フェーズ7-4 で作ります。そして、この重みの箱から、下の nn_controller へ、点線の矢印が出ています。
 

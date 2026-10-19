@@ -4,6 +4,8 @@
   原稿の有無と原文の更新で「未作成」「原文が更新」「最新」に分ける。
 - 言葉にする手間と価値の目安として、図（mermaid・画像）・コードブロック・表・文字数を数える。
 - 1つの原文を分けて原稿にしたときは、原文の拡張子を除いた名前のフォルダ（例: docs/tips/）に置いた原稿をまとめて判定する。
+  分けた原稿は、いちばん古い状態を原文の状態とし、テーマの一部しか作っていなくても「最新」になりうる（備考の本数で見る）。
+  原文に x.md と x/ フォルダの両方があると、x/ の下の1対1の原稿も x.md の分けた原稿と数えるので、そういう原文は分けない。
 - 原文が消えた原稿があれば、それも示す。
 - 標準ライブラリと git だけを使う。通信はしない（複製と更新は、実行する前に済ませておく）。
 
@@ -133,9 +135,13 @@ def main():
         targets = set(files)
         for t in sorted((TRANSCRIPTS / repo).rglob("*.md")) if (TRANSCRIPTS / repo).exists() else []:
             rel = t.relative_to(TRANSCRIPTS / repo).as_posix()
+            if rel in targets:
+                continue
             whole = f"{PurePosixPath(rel).parent}.md"  # 分けた原稿なら、元の原文
-            if rel not in targets and not (whole in targets and not (TRANSCRIPTS / repo / whole).exists()):
+            if whole not in targets:
                 print(f"| 原文なし | {rel} | | | | | 原文が消えたか、対象から外れた |")
+            elif (TRANSCRIPTS / repo / whole).exists():
+                print(f"| 重複 | {rel} | | | | | {whole} の1本の原稿と、分けた原稿が両方ある |")
         print()
 
 
