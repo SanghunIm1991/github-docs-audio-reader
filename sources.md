@@ -20,6 +20,6 @@
 | physical-ai-info-repo | `**/*.md` | `templates/**` `docs/research_procedure.md` | CC BY 4.0 | 2026-10-18 登録 |
 | gymnasium-rl-textbook | `**/*.md` | | 文章と図は CC BY 4.0、コード（コードブロックを含む）は MIT | 2026-10-18 登録 |
 | statistics-certification-study | `**/*.md` | | 文章と図は CC BY 4.0、コード（文書中のコードの例を含む）は MIT | 2026-10-18 登録。Notebook（`.ipynb`）は今は対象にしていない。著作権者の表記は「statistics-certification-study contributors」 |
-| ros2MinimalPhysicalAi | `**/*.md` | | 文章と図は CC BY 4.0、保存するためのコードとコマンドは Apache-2.0 | 2026-10-18 登録。ROS 2 の公式ドキュメント等から引用した部分があり、LICENSE の「第三者の著作物」に一覧がある |
+| ros2MinimalPhysicalAi | `**/*.md` | | 文章と図は CC BY 4.0、保存するためのコードとコマンドは Apache-2.0 | 2026-10-18 登録。ROS 2 の公式ドキュメント等から引用した部分があり、LICENSE の「第三者の著作物」に一覧がある。その部分（他の公式の例のコード、URDF の中身、標準の型の定義、ツールの表示や警告の文面など）は、原稿に写さず言葉で説明し、出典の節に出どころとライセンスの名前を書く。このリポジトリのコードは、ブロックごとの役割と要の行を説明し、名前やコマンドは原文の表記で添える（2026-10-19 にユーザーが決定）。原稿は README の学習の表の順に作り、Tips集はテーマごとに `docs/tips/` に分ける |
 | mathworks-resource-guide | `**/*.md` | | このリポジトリのために書いた文章は CC BY 4.0 | 2026-10-18 登録。リンク先の資料（主に The MathWorks, Inc.）はライセンスの対象外なので、原稿にはその中身を入れない |
 | learn-playwright-dotnet | `**/*.md` | `docs/traceability_matrix.md` | MIT（文章を含むリポジトリ全体） | 2026-10-18 登録。文章も MIT なので、どの原稿にも、出典の節に MIT の著作権表示と許諾の文の全文を入れる。著作権者の表記は「learn-playwright-dotnet contributors」 |

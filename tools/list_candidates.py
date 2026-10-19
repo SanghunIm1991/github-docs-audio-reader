@@ -3,6 +3,7 @@
 - 手元に複製した各リポジトリの、対象のファイル（sources.md の「対象」から「除外」を除いたもの）を、
   原稿の有無と原文の更新で「未作成」「原文が更新」「最新」に分ける。
 - 言葉にする手間と価値の目安として、図（mermaid・画像）・コードブロック・表・文字数を数える。
+- 1つの原文を分けて原稿にしたときは、原文の拡張子を除いた名前のフォルダ（例: docs/tips/）に置いた原稿をまとめて判定する。
 - 原文が消えた原稿があれば、それも示す。
 - 標準ライブラリと git だけを使う。通信はしない（複製と更新は、実行する前に済ませておく）。
 
@@ -63,10 +64,25 @@ def measure(text):
     }
 
 
+def split_dir(repo, path):
+    """1つの原文を分けて作った原稿の置き場所（原文の拡張子を除いた名前のフォルダ）。"""
+    return TRANSCRIPTS / repo / PurePosixPath(path).with_suffix("")
+
+
 def classify(repo, repo_dir, path):
     transcript = TRANSCRIPTS / repo / path
-    if not transcript.exists():
+    if transcript.exists():
+        return classify_one(repo_dir, path, transcript)
+    parts = sorted(split_dir(repo, path).glob("*.md"))
+    if not parts:
         return "未作成", ""
+    # 分けた原稿は、いちばん古い状態のものを、原文の状態とする
+    results = [classify_one(repo_dir, path, t) for t in parts]
+    status, note = min(results, key=lambda r: STATUS_ORDER.index(r[0]))
+    return status, f"{len(parts)}本に分けた原稿" + (f"。{note}" if note else "")
+
+
+def classify_one(repo_dir, path, transcript):
     m = COMMIT.search(transcript.read_text(encoding="utf-8"))
     if not m:
         return "原文が更新", "原稿に原文のコミットの記録がない"
@@ -117,7 +133,8 @@ def main():
         targets = set(files)
         for t in sorted((TRANSCRIPTS / repo).rglob("*.md")) if (TRANSCRIPTS / repo).exists() else []:
             rel = t.relative_to(TRANSCRIPTS / repo).as_posix()
-            if rel not in targets:
+            whole = f"{PurePosixPath(rel).parent}.md"  # 分けた原稿なら、元の原文
+            if rel not in targets and not (whole in targets and not (TRANSCRIPTS / repo / whole).exists()):
                 print(f"| 原文なし | {rel} | | | | | 原文が消えたか、対象から外れた |")
         print()
 
