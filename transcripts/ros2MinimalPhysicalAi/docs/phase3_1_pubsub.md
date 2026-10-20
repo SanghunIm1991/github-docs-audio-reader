@@ -78,15 +78,7 @@ Subscriber を作るには、self.create_subscription に、メッセージの�
 
 #### 1組目のサンプル、talker.py
 
-talker.py は、1秒ごとに hello と番号の文を chatter のトピックへ送るノードで、30行あまりのコードです。
-
-先頭で、rclpy、外部からのシャットダウンを表す例外の ExternalShutdownException、ノードの基のクラスの Node、メッセージの型の String を import します。String は、data というフィールドを1つ持つだけのメッセージです。
-
-次に、Node を継承した Talker というクラスがあります。__init__ の中身は4行です。super().__init__ に 'talker' を渡してノードの名前を決め、create_publisher で String 型、chatter、10 の Publisher を作って self.pub に入れ、番号の self.count を0 にし、create_timer で、1.0秒ごとに on_timer を呼ぶタイマーを作って self.timer に入れます。
-
-on_timer は、String のインスタンスを作り、data に、f文字列で hello と self.count を埋め込んだ文を入れ、self.pub の publish で送り、get_logger().info で、publish という言葉と送った文をログに出し、番号を1増やします。
-
-最後に main 関数があります。rclpy.init で初期化し、Talker を作り、try の中で rclpy.spin に渡します。except で KeyboardInterrupt と ExternalShutdownException を受け止めて何もせず、finally で destroy_node と rclpy.try_shutdown を呼びます。
+talker.py は、1秒ごとに hello と番号の文を chatter のトピックへ送るノードで、30行あまりのコードです。ブロックは3つで、import の部分、Node を継承した Talker というクラス、そして main 関数です。要の行は、クラスの __init__ の中の2行です。create_publisher に String 型、chatter、10 を渡して Publisher を作る行と、create_timer で1.0秒ごとに on_timer を呼ぶタイマーを作る行です。on_timer は、hello と番号の文を publish してログに出し、番号を1増やします。String は、data というフィールドを1つ持つだけのメッセージです。
 
 原文の解説の要点です。
 
@@ -106,7 +98,7 @@ main について。rclpy.init は、ROS2 の通信の基盤の初期化で、�
 
 listener.py は、chatter のトピックを購読し、届いた文字列をログに出すノードです。import と main は talker とほぼ同じで、違うのはノードのクラスだけです。
 
-Listener というクラスの __init__ では、super().__init__ に 'listener' を渡し、create_subscription に、String 型、chatter、self.on_message、10 を渡して、self.sub に入れます。on_message は、引数の msg を受け取り、received という言葉と msg.data をログに出すだけです。
+要の行は、__init__ の中で create_subscription に、String 型、chatter、self.on_message、10 を渡す行です。on_message は、受け取った文をログに出すだけです。
 
 解説の要点です。create_subscription の引数は、型、トピックの名前、コールバック、QoS の depth の順です。Publisher と違い、コールバックを3つ目の引数に渡します。Python の版では、コールバックの後ろに QoS が来ます。10 は受ける側のキューの深さで、コールバックの処理が遅れて、まだ処理していないメッセージが溜まったとき、最大10件まで持ちます。on_message の msg は、受け取った String のインスタンスで、msg.data で中身を取り出します。コールバックは spin の中から呼ばれるので、自分で呼び出すコードは書きません。
 
@@ -118,7 +110,7 @@ Listener というクラスの __init__ では、super().__init__ に 'listener'
 
 ここからは、1組目とは別の組です。トピック sine で、数値の Float64 を10 Hz で送ります。ノードの骨組みは1組目と同じなので、違いを中心に読みます。
 
-sine_pub.py は、先頭で math を import し、型は Float64 を import します。SinePub というクラスの __init__ では、ノードの名前を sine_pub にし、Float64 型、sine、10 の Publisher を作り、周波数の self.freq_hz を0.5 にし、0.1秒ごとに on_timer を呼ぶタイマーを作ります。on_timer は、self.get_clock().now() の nanoseconds に 1e-9 を掛けて、今の時刻 t を秒にし、Float64 のメッセージの data に、math.sin の、2.0 掛ける math.pi 掛ける self.freq_hz 掛ける t の値を入れて、publish します。ログは出しません。main は、ほかと同じ形です。
+sine_pub.py の要の行は2つです。__init__ で、0.1秒ごとに on_timer を呼ぶタイマーを作る行と、on_timer の中で、今の時刻 t を秒で取り出し、math.sin で、2.0 掛ける math.pi 掛ける self.freq_hz 掛ける t を計算して送る行です。周波数の self.freq_hz は属性で、0.5 です。ログは出しません。
 
 解説の要点です。
 
@@ -192,13 +184,7 @@ Python との違いの見どころは3つです。型が、テンプレートの
 
 #### 1組目のサンプル、talker.cpp
 
-talker.cpp は、Python の talker.py と同じ仕様のノードで、40行ほどのコードです。
-
-先頭で、標準の chrono、memory、string と、rclcpp/rclcpp.hpp、std_msgs/msg/string.hpp を include し、using namespace std::chrono_literals を書きます。
-
-Talker というクラスは、rclcpp::Node を public で継承します。public の部分のコンストラクタは、初期化のリストで Node に "talker" を渡し、本体で、create_publisher で String 型、chatter、10 の Publisher を作って pub_ に入れ、create_wall_timer で、1s ごとに、this を取り込んだラムダ式から on_timer を呼ぶタイマーを作って timer_ に入れます。private の部分には、on_timer と、3つのメンバ変数があります。on_timer は、String のメッセージを作り、data に hello と、count_ を後置で増やしながら std::to_string で文字列にしたものをつないで入れ、pub_ の矢印の publish で送り、RCLCPP_INFO で、publish と %s の書式に、data の c_str() を渡してログに出します。メンバ変数は、Publisher の SharedPtr の pub_、TimerBase の SharedPtr の timer_、0 で初期化した int の count_ です。
-
-main 関数は、rclcpp::init に argc と argv を渡し、std::make_shared で Talker を作って rclcpp::spin に渡し、rclcpp::shutdown を呼んで、0 を返します。
+talker.cpp は、Python の talker.py と同じ仕様のノードで、40行ほどのコードです。ブロックは3つで、include と using の部分、rclcpp::Node を継承した Talker というクラス、そして main 関数です。クラスの中は、Publisher とタイマーを作るコンストラクタ、送る処理の on_timer、そして pub_、timer_、count_ の3つのメンバ変数です。main は、rclcpp::init、make_shared で作ったノードを rclcpp::spin に渡す、rclcpp::shutdown、の順です。
 
 原文の解説の要点です。骨組み、つまりノードを作る、spin、終わる、は Python と同じで、ここでは言語に固有の点を説明しています。
 
@@ -222,7 +208,7 @@ main。rclcpp::init は、Python の rclpy.init に相当する初期化で、RO
 
 #### 1組目のサンプル、listener.cpp
 
-listener.cpp は、listener.py と同じ仕様のノードです。コンストラクタで、ノードの名前を listener にし、create_subscription に、String 型を山括弧で付け、chatter、10、そしてラムダ式を渡して、sub_ に入れます。ラムダ式は、this を取り込み、String のメッセージへの const の参照を受け取り、RCLCPP_INFO で received と data の c_str() をログに出します。private には、Subscription の SharedPtr の sub_ があります。main は talker と同じ形です。
+listener.cpp は、listener.py と同じ仕様のノードです。要の行は、コンストラクタで create_subscription に、String 型を山括弧で付けて、chatter、10、そして届いたときにログを出すラムダ式を渡し、sub_ に入れる行です。main は talker と同じ形です。
 
 解説の要点です。create_subscription の引数の順は、トピックの名前、QoS、コールバックです。Python の版の、型、トピックの名前、コールバック、QoS とは、QoS とコールバックの順が逆なので、注意します。コールバックのラムダの引数は、メッセージへの const の参照で、コピーせずに、読み取りだけで受け取ります。this の取り込みは、get_logger() を呼ぶために必要です。
 
@@ -234,7 +220,7 @@ listener.cpp は、listener.py と同じ仕様のノードです。コンスト�
 
 #### 2組目のサンプル、sine_pub.cpp
 
-sine_pub.cpp は、sine_pub.py と同じ仕様です。include に cmath と std_msgs/msg/float64.hpp が加わります。コンストラクタで、ノードの名前を sine_pub にし、Float64 型、sine、10 の Publisher と、100ms ごとに on_timer を呼ぶタイマーを作ります。on_timer は、now().seconds() で今の時刻を const の double の t に入れ、Float64 のメッセージの data に、std::sin の、2.0 掛ける M_PI 掛ける freq_hz_ 掛ける t の値を入れて、publish します。ログは出しません。メンバ変数は、pub_、timer_、そして0.5 で初期化した double の freq_hz_ です。
+sine_pub.cpp は、sine_pub.py と同じ仕様です。要の行は2つで、100ms ごとに on_timer を呼ぶタイマーを作る行と、on_timer の中で now().seconds() で時刻を取り、std::sin と M_PI で値を計算して送る行です。周波数は、0.5 で初期化したメンバ変数の freq_hz_ です。
 
 解説の要点です。100ms は chrono_literals のリテラルで、Python の0.1秒に相当します。単位が型に含まれるので、秒とミリ秒の取り違えが起きにくい。now() は Node のメソッドで、ノードの時計の今の時刻を返し、seconds() で、秒の単位の double が直接得られます。Python の版のような、ナノ秒からの手での換算は要りません。M_PI は cmath から来る円周率の定数で、環境によっては定義されないこともありますが、Linux と gcc では普通は使えます。std::sin もラジアンを取ります。変えない値に const を付ける習慣にすると、意図しない書き換えをコンパイラが見つけてくれます。
 
@@ -306,7 +292,7 @@ ros2 topic info /chatter -v では、型と、Publisher の数の1 が出て、�
 
 ros2 topic echo /sine は、メッセージを、ハイフン3つの行で区切って表示します。sine_sub のログと違って書式を指定していないので、桁の多い表示になります。
 
-ros2 topic hz /sine は、平均の周期が10.000 で、最小と最大の間隔がどちらも0.100秒、という集計を、数秒ごとに出し直します。平均が10 の前後なら、仕様どおりです。
+ros2 topic hz /sine は、平均の頻度、つまり1秒あたりの回数が10.000 で、最小と最大の間隔がどちらも0.100秒、という集計を、数秒ごとに出し直します。平均の頻度が10 の前後なら、仕様どおりです。
 
 rqt_graph では、ノードが楕円、トピックが矢印か四角で描かれ、/talker から /chatter を通って /listener へ、/sine_pub から /sine を通って /sine_sub へ、という2本の流れが見えます。
 

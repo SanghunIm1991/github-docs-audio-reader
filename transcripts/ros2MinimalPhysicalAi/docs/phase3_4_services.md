@@ -106,7 +106,7 @@ learn_py の内側の learn_py のフォルダに、1組目の足し算の add_s
 
 ### 4-2. 1組目の足し算: サーバ、add_server.py。必須
 
-add_server.py は、30行あまりのコードです。rclpy、example_interfaces.srv の AddTwoInts、ExternalShutdownException、Node を import します。AddServer というクラスの __init__ では、ノードの名前を add_server にし、create_service で、AddTwoInts 型、add_two_ints、self.on_request のサービスを作って self.srv に入れます。on_request は、request と response を受け取り、response.sum に request.a と request.b を足した値を入れ、足し算の式と答えをログに出して、response を返します。main は、フェーズ3-1 と同じ形です。
+add_server.py は、30行あまりのコードで、クラスと main の2つのブロックからなります。要の行は、__init__ で create_service に、AddTwoInts 型、add_two_ints、self.on_request を渡す行と、on_request の中で、response.sum に a と b の和を入れて、response を返す行です。
 
 原文の解説です。役割は、add_two_ints という名前のサービスを公開し、要求が来るたびに a 足す b を計算して返すことです。全体の流れは、ノードを作る、サービスを登録する、spin で要求を待ち続ける、の3段階です。トピックの listener とほぼ同じ骨組みで、違いは、受け取ったら結果を返す点だけです。
 
@@ -128,11 +128,7 @@ main は、フェーズ3-1 のノードと同じ決まった形です。rclpy.sp
 
 ### 4-3. 1組目の足し算: クライアント、add_client.py。任意
 
-4-2節のサーバを呼ぶ側です。add_client.py は、40行ほどのコードです。
-
-AddClient というクラスの __init__ では、ノードの名前を add_client にし、declare_parameter で a を既定の1、b を既定の2 で宣言し、create_client で、AddTwoInts 型、add_two_ints のクライアントを作って self.cli に入れます。まだ呼びません。
-
-main 関数が、仕事の本体です。rclpy.init の後でノードを作り、try の中で、次の順に進みます。まず、cli の wait_for_service を、timeout_sec を5.0 にして呼び、False なら、サービスが使えない、というエラーのログを出して return します。次に、AddTwoInts.Request() で空の要求を作り、get_parameter の value で a と b を詰めます。そして、cli の call_async に要求を渡して future を受け取り、rclpy.spin_until_future_complete で、future が終わるまでノードを回します。future の result() が None でなければ、足し算の式と答えの sum をログに出し、None なら、呼び出しに失敗した、というエラーのログに、future の exception() を添えて出します。except は KeyboardInterrupt だけを受け止め、finally で destroy_node と rclpy.try_shutdown を呼びます。
+4-2節のサーバを呼ぶ側です。add_client.py は、40行ほどのコードです。クラスの __init__ は、パラメータの a と b を宣言して、クライアントを作るだけで、仕事の本体は main 関数にあります。main は、サーバを待つ、要求を作る、非同期に送る、結果を待ってログに出す、の4段で進みます。要の行は、wait_for_service、call_async、spin_until_future_complete の3つを呼ぶ行です。
 
 原文の解説です。役割は、サーバを見つけ、a と b を送って1回だけ呼び、答えをログに出して終わることです。サーバや Publisher と違い、spin し続けるノードではなく、1回の仕事が終わったら main を抜けて終わる形になっています。
 
@@ -158,7 +154,7 @@ spin_until_future_complete は、future に結果が入るまでノードを回�
 
 ここからは、1組目の足し算とは別の組で、このノード1つで動きます。counter_node.py は、40行あまりのコードです。
 
-rclpy、ExternalShutdownException、Node、std_msgs.msg の Int32、std_srvs.srv の Trigger を import します。CounterNode というクラスの __init__ では、ノードの名前を counter_node にし、self.count を0 にし、Int32 型、counter、10 の Publisher、1.0秒ごとに on_timer を呼ぶタイマー、そして create_service で、Trigger 型、reset_counter、self.on_reset のサービスを作ります。on_timer は、今の count を Int32 のメッセージで送ってから、1増やします。on_reset は、response.success を True にし、response.message に、f文字列で、counter reset と、リセットする前の count を入れた文を入れてから、count を0 に戻し、その文をログに出して、response を返します。main は、これまでと同じ形です。
+クラスの __init__ で、Publisher、タイマー、サービスの3つを作り、コールバックは、送る on_timer と、リセットする on_reset の2つです。要の行は、create_service に、Trigger 型、reset_counter、self.on_reset を渡す行です。
 
 原文の解説です。役割は、1秒ごとにカウントを配信しつつ、reset_counter のサービスで0 に戻せることです。1つのノードに、トピックの発行、つまりタイマーと、サービスのサーバが同居する例で、トピックは継続的な流れ、サービスは必要なときの操作、という使い分けを、1本のノードで体感できます。
 
@@ -210,9 +206,7 @@ Python との違いの見どころは、応答を返すのか、書き込むの�
 
 ### 5-2. 1組目の足し算: サーバ、add_server.cpp
 
-add_server.cpp は、40行ほどのコードです。memory、example_interfaces/srv/add_two_ints.hpp、rclcpp/rclcpp.hpp を include し、using で、AddTwoInts という別名を、example_interfaces の srv の AddTwoInts に付けます。
-
-AddServer というクラスのコンストラクタは、ノードの名前を add_server にし、create_service に、山括弧で AddTwoInts を付け、add_two_ints という名前と、ラムダ式を渡して、service_ に入れます。ラムダ式は、this を取り込み、Request への const の shared_ptr と、Response への shared_ptr を受け取って、response の矢印の sum に、request の矢印の a と b の和を入れ、RCLCPP_INFO で、%lld の書式で、3つの値を、static_cast で long long に変えてログに出します。private には、Service の SharedPtr の service_ があります。main は、これまでと同じ形です。
+add_server.cpp は、40行ほどのコードです。要の行は、コンストラクタで create_service に、山括弧で AddTwoInts を付けて、add_two_ints と、ラムダ式を渡し、service_ に入れる行です。ラムダ式の中で、response の矢印の sum に、a と b の和を書き込みます。
 
 解説の要点です。Python の版と同じサーバで、差分を中心に読みます。
 
@@ -230,9 +224,7 @@ main は、rclcpp::spin に make_shared で作った AddServer を渡して、�
 
 ### 5-3. 1組目の足し算: クライアント、add_client.cpp
 
-add_client.cpp は、40行ほどのコードで、クラスを作らず、main の中にすべてを順に書いています。chrono、cstdint、memory と、AddTwoInts のヘッダ、rclcpp を include し、using namespace std::chrono_literals と、AddTwoInts の別名を書きます。
-
-main では、rclcpp::init の後、rclcpp::Node の make_shared で、add_client という名前のノードを直接作ります。そして、declare_parameter に山括弧で int64_t を付けて、a を既定の1、b を既定の2 で宣言し、返った値を const の int64_t の a と b に入れます。create_client で、AddTwoInts 型、add_two_ints のクライアントを作り、wait_for_service に 5s を渡して、false なら、サービスが使えない、というエラーのログを出し、rclcpp::shutdown を呼んで、1 を返します。続いて、make_shared で Request を作って a と b を詰め、async_send_request で送って future を受け取ります。spin_until_future_complete の戻り値が、FutureReturnCode の SUCCESS なら、future の get() の矢印の sum を使って、足し算の式と答えをログに出し、そうでなければ、呼び出しに失敗した、というエラーのログを出します。最後に shutdown を呼んで、0 を返します。
+add_client.cpp は、40行ほどのコードで、クラスを作らず、main の中にすべてを順に書いています。流れは Python の版と同じ4段で、要の行は、wait_for_service、async_send_request、spin_until_future_complete の3つを呼ぶ行です。
 
 解説の要点です。Python の版と同じ、待つ、要求を作る、非同期に送る、結果を待つ、の流れを、main の中に順に書いています。クラスを作らず、rclcpp::Node の make_shared でノードを直接作るのが、Python の版との構造の違いです。
 
@@ -250,9 +242,7 @@ spin_until_future_complete の戻り値は FutureReturnCode です。SUCCESS の
 
 ### 5-4. 2組目のカウンタのリセット、counter_node.cpp
 
-ここからは、1組目とは別の組で、4-4節の Python の版と同じ仕様です。counter_node.cpp は、50行ほどのコードです。chrono、memory、string と、rclcpp、std_msgs/msg/int32.hpp、std_srvs/srv/trigger.hpp を include します。
-
-CounterNode というクラスのコンストラクタは、ノードの名前を counter_node にし、Int32 型、counter、10 の Publisher と、1s ごとに on_timer を呼ぶタイマーを作り、create_service に、山括弧で Trigger を付け、reset_counter という名前と、ラムダ式を渡して、service_ に入れます。ラムダ式は、1つ目の引数の要求には名前を付けず、2つ目の引数の response の、success を true にし、message に、counter reset の文と、std::to_string で文字列にした count_ をつないだものを入れてから、count_ を0 に戻し、message の c_str() をログに出します。private の on_timer は、Int32 のメッセージの data に、count_ を後置で増やしながら入れて、publish します。メンバ変数は、pub_、timer_、service_、そして0 で初期化した count_ です。main は、これまでと同じ形です。
+ここからは、1組目とは別の組で、4-4節の Python の版と同じ仕様です。counter_node.cpp は、50行ほどのコードです。コンストラクタで、Publisher、タイマー、サービスの3つを作り、リセットの処理は、create_service に渡すラムダ式に直接書いています。要の行は、その create_service に、山括弧で Trigger を付けて、reset_counter とラムダ式を渡す行です。
 
 解説の要点です。
 

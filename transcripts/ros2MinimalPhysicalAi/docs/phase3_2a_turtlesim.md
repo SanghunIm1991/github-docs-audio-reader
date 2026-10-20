@@ -70,15 +70,7 @@ learn_py の内側の learn_py のフォルダに、turtle_circle.py を作り�
 
 ### サンプルコードと解説
 
-turtle_circle.py は、30行あまりのコードです。
-
-先頭で、rclpy、geometry_msgs.msg の Twist、ExternalShutdownException、Node を import します。
-
-TurtleCircle というクラスは、Node を継承します。__init__ では、ノードの名前を turtle_circle にし、create_publisher で、Twist 型、/turtle1/cmd_vel、10 の Publisher を作って self.pub に入れ、create_timer で、0.1秒ごとに on_timer を呼ぶタイマーを作って self.timer に入れます。
-
-on_timer は、Twist のメッセージを作り、linear.x に2.0、angular.z に1.0 を入れて、publish します。
-
-main 関数は、フェーズ3-1 のノードと同じ形です。rclpy.init、ノードを作る、try の中で rclpy.spin、except で KeyboardInterrupt と ExternalShutdownException を受け止める、finally で destroy_node と rclpy.try_shutdown、です。
+turtle_circle.py は、30行あまりのコードで、骨組みはフェーズ3-1 の talker と同じです。要の行は3つです。create_publisher に、Twist 型、/turtle1/cmd_vel、10 を渡す行。create_timer で、0.1秒ごとに on_timer を呼ぶタイマーを作る行。そして on_timer の中で、linear.x に2.0、angular.z に1.0 を入れて publish する行です。
 
 原文の解説です。役割は、一定の速度の指令を10 Hz で送り続ける Publisher です。フェーズ1 で、ros2 topic pub に -r 10 を付けて手で打っていたことを、ノードにしたものにあたります。流れは、ノードを作る、Publisher とタイマーを用意する、タイマーが鳴るたびに Twist を作って送る、です。
 
@@ -110,9 +102,7 @@ learn_cpp の src に turtle_circle.cpp を作ります。主な API の表は1�
 
 ### サンプルコードと解説
 
-turtle_circle.cpp は、40行ほどのコードです。chrono と memory、geometry_msgs/msg/twist.hpp、rclcpp/rclcpp.hpp を include し、using namespace std::chrono_literals を書きます。
-
-TurtleCircle というクラスは、rclcpp::Node を public で継承します。コンストラクタは、初期化のリストで Node に "turtle_circle" を渡し、本体で、create_publisher で Twist 型を山括弧で付けて、/turtle1/cmd_vel、10 の Publisher を作って pub_ に入れ、create_wall_timer で、100ms ごとに、this を取り込んだラムダから on_timer を呼ぶタイマーを作って timer_ に入れます。private の on_timer は、Twist のメッセージを作り、linear.x に2.0、angular.z に1.0 を入れて、pub_ の矢印の publish で送ります。メンバ変数は、Publisher の SharedPtr の pub_ と、TimerBase の SharedPtr の timer_ です。main は、rclcpp::init、make_shared でノードを作って rclcpp::spin に渡す、rclcpp::shutdown、の形です。
+turtle_circle.cpp は、40行ほどのコードで、骨組みはフェーズ3-1 の talker.cpp と同じです。要の行は、Python の版と同じ3つです。create_publisher に、山括弧で Twist 型を付けて、/turtle1/cmd_vel と10 を渡す行。create_wall_timer で、100ms ごとに on_timer を呼ぶ行。そして on_timer の中で、linear.x に2.0、angular.z に1.0 を入れて publish する行です。
 
 原文の解説は、Python の版と同じ Publisher を C++ で書いたもので、ここでは言語に固有の点を中心に書く、としています。
 

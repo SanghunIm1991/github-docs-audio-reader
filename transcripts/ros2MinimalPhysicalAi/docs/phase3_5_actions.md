@@ -94,19 +94,7 @@ learn_py の内側の learn_py のフォルダに、fibonacci_server.py と fibo
 
 ### fibonacci_server.py
 
-fibonacci_server.py は、60行あまりのコードです。
-
-先頭で、time、rclpy、example_interfaces.action の Fibonacci、rclpy.action の ActionServer と CancelResponse と GoalResponse、rclpy.callback_groups の ReentrantCallbackGroup、rclpy.executors の ExternalShutdownException と MultiThreadedExecutor、そして Node を import します。
-
-FibonacciServer というクラスの __init__ では、ノードの名前を fibonacci_server にし、ActionServer を作って self.server に入れます。引数は、self、Fibonacci、fibonacci の名前と、execute_callback に self.execute、goal_callback に self.on_goal、cancel_callback に self.on_cancel、そして callback_group に ReentrantCallbackGroup() です。
-
-on_goal は、ゴールの order が1 より小さければ、拒否するという警告のログを出して、GoalResponse の REJECT を返し、そうでなければ、受理するというログを出して ACCEPT を返します。
-
-on_cancel は、中断が要求された、というログを出して、CancelResponse の ACCEPT を、いつも返します。
-
-execute は、ゴールの order を取り出し、数列を0 と1 で始め、Feedback と Result の入れ物を作ります。そして、1 から order の手前までループします。各回の先頭で、is_cancel_requested が真なら、canceled() を呼び、結果に今の数列を入れ、ゴールが中断された、というログを出して、結果を返します。そうでなければ、直前の2項の和を数列に足し、フィードバックに数列を入れて publish_feedback で送り、time.sleep で1.0秒待ちます。ループを終えたら、succeed() を呼び、結果に数列を入れ、ゴールが成功したというログに数列を添えて出し、結果を返します。
-
-main は、ノードを作った後に MultiThreadedExecutor を作り、rclpy.spin に、ノードと、executor のキーワードでその executor を渡します。except と finally は、これまでと同じです。
+fibonacci_server.py は、60行あまりのコードです。ブロックは、クラスの __init__、3つのコールバック、つまりゴールを受けるかを決める on_goal、中断を受けるかを決める on_cancel、実行の本体の execute、そして main です。要の行は3つです。__init__ で ActionServer に、3つのコールバックと、callback_group に ReentrantCallbackGroup() を渡す行。execute のループの中で、is_cancel_requested を確かめる行と、publish_feedback で途中経過を送る行。そして main で、rclpy.spin に MultiThreadedExecutor を渡す行です。
 
 原文の解説の要点です。役割は、ゴールを受け、1秒ごとに数列を伸ばしながら feedback を返し、最後に result を返すことです。流れは4段です。1つ目、ゴールが届くと on_goal が受理か拒否かを決める。2つ目、受理されたら、つまり ACCEPTED なら、execute が呼ばれて実行に入る、つまり EXECUTING。3つ目、ループの各回で中断の要求を確かめ、無ければ項を足して feedback を出し、1秒待つ。4つ目、終われば succeed() で SUCCEEDED、中断の要求があれば canceled() で CANCELED、のどちらかで終わる。1節の状態遷移図のうち、サーバの側が受け持つのがこの部分です。
 
@@ -130,25 +118,7 @@ main では、rclpy.spin に executor を渡すのが要点です。
 
 ### fibonacci_client.py
 
-fibonacci_client.py は、80行ほどのコードです。
-
-先頭で、rclpy、action_msgs.msg の GoalStatus、Fibonacci、rclpy.action の ActionClient、Node を import します。続いて、STATUS_NAMES という辞書を作り、GoalStatus の STATUS_SUCCEEDED、STATUS_CANCELED、STATUS_ABORTED の3つの値を、SUCCEEDED、CANCELED、ABORTED の名前に対応させます。
-
-FibonacciClient というクラスには、6つのメソッドがあります。
-
-__init__ は、ノードの名前を fibonacci_client にし、order を既定の5、cancel_after を既定の0.0 で宣言し、ActionClient を作り、goal_handle と cancel_timer を None に、done を False にします。
-
-send_goal は、wait_for_server を timeout_sec の5.0 で呼び、False なら、アクションのサーバが使えない、というエラーのログを出して、done を True にして戻ります。サーバがいれば、Fibonacci.Goal() を作って order を詰め、send_goal_async に、ゴールと feedback_callback の self.on_feedback を渡して、Future を受け取り、その add_done_callback に on_goal_response を登録します。
-
-on_goal_response は、Future の result() から goal_handle を取り出し、accepted が偽なら、ゴールが拒否された、というエラーのログを出して、done を True にして戻ります。受理なら、ゴールが受理された、とログに出し、goal_handle を self に保存し、get_result_async() の add_done_callback に on_result を登録します。そして、cancel_after が0.0 より大きければ、その秒数で on_cancel_timer を呼ぶタイマーを作ります。
-
-on_cancel_timer は、自分のタイマーを cancel してから、中断の要求を送る、とログに出し、goal_handle の cancel_goal_async() を呼びます。
-
-on_feedback は、届いたフィードバックの数列を、リストにしてログに出します。
-
-on_result は、Future の result() から応答を取り出し、status を STATUS_NAMES で名前に直して、結果の状態の名前と数列をログに出し、done を True にします。
-
-main は、ノードを作って send_goal を呼び、rclpy.ok() が真で done が偽の間、rclpy.spin_once を timeout_sec の0.1 で繰り返します。except は KeyboardInterrupt だけを受け止め、finally で後片付けをします。
+fibonacci_client.py は、80行ほどのコードです。先頭に、結果の状態を名前に直す辞書の STATUS_NAMES があり、クラスには6つのメソッドがあります。__init__、ゴールを送る send_goal、受理か拒否の返事を受ける on_goal_response、中断を要求する on_cancel_timer、途中経過を受ける on_feedback、最後の結果を受ける on_result です。要の行は3つです。send_goal で、send_goal_async にゴールと feedback_callback を渡し、返った Future の add_done_callback に on_goal_response を登録する行。on_goal_response で、get_result_async() の add_done_callback に on_result を登録する行。そして main で、done が True になるまで rclpy.spin_once を繰り返す行です。
 
 原文の解説の要点です。役割は、ゴールを送り、feedback をログに出し、結果を受けて終わる、設定があれば途中で中断の要求も送る、ことです。クライアントは、サーバと違って、待ち受ける処理が、非同期の連鎖になります。send_goal で送り、on_goal_response で受理か拒否の返事を受け、on_feedback を何度も受け、on_result で最後の結果を受ける、と、それぞれ前の段の Future やコールバックが終わったときに、次が動きます。
 
@@ -202,11 +172,7 @@ Python との違いの見どころは、Python は Future の完了のコール�
 
 ### fibonacci_server.cpp
 
-fibonacci_server.cpp は、80行ほどのコードです。memory と thread、example_interfaces/action/fibonacci.hpp、rclcpp、rclcpp_action を include し、using で、Fibonacci をアクションの型に、GoalHandle を、rclcpp_action の ServerGoalHandle の Fibonacci に、別名として付けます。
-
-FibonacciServer というクラスのコンストラクタは、create_server に、山括弧で Fibonacci を付け、this、"fibonacci"、そして3つのラムダ式を渡して、server_ に入れます。1つ目のラムダはゴールの処理で、ゴールの UUID とゴールの本体を受け取り、order が1 より小さければ、拒否の警告を出して REJECT を返し、そうでなければ、受理のログを出して ACCEPT_AND_EXECUTE を返します。2つ目のラムダは中断の処理で、中断が要求された、とログに出して、CancelResponse の ACCEPT を返します。3つ目のラムダは受理した後の処理で、executor を塞がないよう、std::thread で、this と goal_handle を取り込んで execute を呼ぶスレッドを作り、detach します。
-
-private の execute は、goal_handle の get_goal() でゴールを取り出し、make_shared で Feedback と Result を作ります。auto の参照で、フィードバックの中の sequence を、sequence という名前で指し、0 と1 で初期化します。そして、rclcpp::Rate を1 で作ります。ループは、1 から order の手前まで、rclcpp::ok() が真の間まわります。各回の先頭で、is_canceling() が真なら、結果に数列を入れて canceled に渡し、ゴールが中断された、とログに出して return します。そうでなければ、直前の2項の和を push_back で足し、publish_feedback でフィードバックを送り、rate の sleep() で待ちます。ループを抜けて、rclcpp::ok() が真なら、結果に数列を入れて succeed に渡し、ゴールが成功した、とログに出します。メンバ変数は、Server の SharedPtr の server_ です。main は、これまでと同じ形です。
+fibonacci_server.cpp は、80行ほどのコードです。コンストラクタで create_server に3つのラムダ式を渡し、実行の本体は private の execute にあります。要の行は2つです。3つ目のラムダ、つまり受理した後の処理で、std::thread で execute を呼ぶスレッドを作り、detach する行。そして execute のループの中で、is_canceling() を確かめ、publish_feedback で途中経過を送る行です。
 
 原文の解説です。Python の版と同じ仕事をします。原文は、Python の版と C++ の版の2列の表で、対応を7行にしています。
 
@@ -224,7 +190,7 @@ time.sleep の1.0秒は、rclcpp::Rate の1 と、rate の sleep()。
 
 MultiThreadedExecutor は、要らない。実行を別のスレッドにするからです。
 
-さらに、7つの点が説明されています。
+さらに、8つの点が説明されています。
 
 型の別名。Fibonacci はアクションの型、GoalHandle は、サーバの側でゴールを操作する取っ手です。ヘッダは、fibonacci.hpp のように、型の名前を小文字にしたファイルの名前になります。
 
@@ -248,23 +214,7 @@ main は、普通の、単一のスレッドの rclcpp::spin でかまいませ�
 
 ### fibonacci_client.cpp
 
-fibonacci_client.cpp は、100行あまりのコードです。chrono、cstdint、memory、sstream、string、vector と、Fibonacci のヘッダ、rclcpp、rclcpp_action を include し、chrono_literals と、Fibonacci と、ClientGoalHandle の GoalHandle の別名を書きます。
-
-最初に、to_text という補助の関数があります。int32_t の vector を受け取り、ostringstream を使って、角括弧で囲み、コンマと空白で区切った文字列にして返します。ログに表示するためのものです。
-
-FibonacciClient というクラスのコンストラクタは、declare_parameter で、int64_t の order を既定の5、double の cancel_after を既定の0.0 で宣言して、order_ と cancel_after_ に入れ、create_client で、Fibonacci 型、"fibonacci" のクライアントを作って client_ に入れます。
-
-send_goal は、まず wait_for_action_server に 5s を渡し、false なら、アクションのサーバが使えない、というエラーのログを出して、rclcpp::shutdown を呼んで戻ります。サーバがいれば、Fibonacci の Goal を作り、order に、order_ を static_cast で int32_t にしたものを入れます。そして、SendGoalOptions の options を作り、3つのラムダを設定します。
-
-goal_response_callback のラムダは、goal_handle を受け取り、それが空なら、ゴールが拒否された、というエラーのログを出して shutdown し、戻ります。空でなければ、受理されたとログに出して goal_handle_ に保存し、cancel_after_ が0.0 より大きければ、std::chrono::duration の double で包んだ cancel_after_ の周期で、タイマーを作ります。そのタイマーのラムダは、自分を cancel し、中断の要求を送る、とログに出して、client_ の async_cancel_goal に goal_handle_ を渡します。
-
-feedback_callback のラムダは、1つ目の引数の取っ手は名前を付けずに受け、2つ目の引数のフィードバックの sequence を、to_text で文字列にしてログに出します。
-
-result_callback のラムダは、WrappedResult を受け取り、その code を switch で、SUCCEEDED、CANCELED、ABORTED のいずれかの名前に直し、どれでもなければ UNKNOWN にして、結果の状態の名前と、to_text で文字列にした数列をログに出し、rclcpp::shutdown を呼びます。
-
-最後に、async_send_goal に、ゴールと options を渡して送ります。
-
-メンバ変数は、order_、cancel_after_、client_、goal_handle_、cancel_timer_ です。main では、ノードを make_shared で作り、send_goal を呼んでから、rclcpp::spin にノードを渡します。spin から戻ったら shutdown を呼び、0 を返します。
+fibonacci_client.cpp は、100行あまりのコードです。ブロックは、数列を文字列にする補助の関数の to_text、クラスのコンストラクタと send_goal、そして main です。send_goal が中心で、SendGoalOptions の options に、goal_response_callback、feedback_callback、result_callback の3つのラムダを設定してから、async_send_goal にゴールと options を渡して送ります。要の行は、その async_send_goal の行と、result_callback の最後で rclcpp::shutdown を呼ぶ行です。
 
 原文の解説です。Python の版のクライアントと同じ役割です。構造の違いは、Python が Future に完了のコールバックを1つずつつなぐのに対し、C++ は、送るときに SendGoalOptions へ、3つのコールバックをまとめて設定する点です。原文は、Python の版と、C++ の版の options のメンバ、の2列の表で、対応を4行にしています。
 
@@ -276,7 +226,7 @@ get_result_async() の add_done_callback に on_result を登録するのは、r
 
 done を True にして main のループを抜けるのは、rclcpp::shutdown() で spin を終わらせること。
 
-さらに、6つの点が説明されています。
+さらに、8つの点が説明されています。
 
 to_text は、数列を角括弧の形の文字列にする補助の関数です。RCLCPP_INFO の %s の書式には、配列をそのまま渡せないからです。c_str() で const char のポインタに直して渡しています。
 

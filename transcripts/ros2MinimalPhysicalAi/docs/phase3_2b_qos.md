@@ -98,7 +98,7 @@ QoS の設定は、rclpy.qos から QoSProfile、ReliabilityPolicy、DurabilityP
 
 ### qos_util.py
 
-qos_util.py は、十数行の短いファイルです。rclpy.qos から3つを import し、make_qos という関数を1つ定義しています。make_qos は、reliability_str と durability_str の2つの文字列を受け取ります。まず、reliability_str が reliable か best_effort のどちらでもなければ、ValueError を投げます。durability_str も、volatile か transient_local のどちらでもなければ、ValueError を投げます。そのうえで、QoSProfile を作って返します。depth は10、reliability は、文字列が reliable なら ReliabilityPolicy の RELIABLE、そうでなければ BEST_EFFORT。durability は、文字列が transient_local なら DurabilityPolicy の TRANSIENT_LOCAL、そうでなければ VOLATILE です。
+qos_util.py は、十数行の短いファイルで、make_qos という関数を1つだけ持ちます。make_qos は、reliability_str と durability_str の2つの文字列を受け取り、前半で想定していない値なら ValueError を投げ、後半で QoSProfile を作って返します。要の行は、QoSProfile に、depth を10、文字列に応じた ReliabilityPolicy と DurabilityPolicy を渡す行です。
 
 原文の解説です。役割は、talker と listener が同じ規則で QoS を組み立てるための、共通の関数です。ノードではないので main は無く、setup.py の entry_points にも足しません。entry_points に書くのは、ros2 run で起動する実行ファイルだけです。
 
@@ -132,11 +132,7 @@ QoSProfile の3つの項目の意味です。depth は、履歴、つまり hist
 
 ### qos_talker.py
 
-qos_talker.py は、40行ほどのコードです。先頭で、learn_py.qos_util の make_qos、rclpy、ExternalShutdownException、Node、String を import します。
-
-QosTalker というクラスの __init__ では、ノードの名前を qos_talker にし、declare_parameter で、reliability を既定の reliable で、durability を既定の volatile で宣言します。続いて、get_parameter で2つの値を文字列として取り出して、reliability_str と durability_str に入れ、QoS の設定をログに出します。そして、create_publisher で、String 型、qos_test、そして make_qos で組み立てた QoS の Publisher を作り、番号を0 にして、1.0秒ごとに on_timer を呼ぶタイマーを作ります。
-
-on_timer は、msg と番号の文字列を作って publish し、publish という言葉と送った文をログに出して、番号を1増やします。main は、フェーズ3-1 と同じ形です。
+qos_talker.py は、40行ほどのコードで、骨組みはフェーズ3-1 の talker と同じです。違いは __init__ の前半で、パラメータの reliability と durability を、既定の reliable と volatile で宣言して読み、QoS の設定をログに出します。要の行は、create_publisher に、String 型、qos_test、そして make_qos で組み立てた QoS を渡す行です。on_timer は、msg と番号の文を送ってログに出します。
 
 原文の解説の要点です。役割は、QoS を起動のときのパラメータで切り替えられる Publisher で、5節の相性の実験の送り手になります。
 
@@ -158,7 +154,7 @@ on_timer のログの publish は、送ろうとした印で、受け取る側�
 
 ### qos_listener.py
 
-qos_listener.py も、40行ほどのコードです。make_qos と、パラメータの宣言と取得、QoS のログは、talker と同じです。違いは、create_subscription で、String 型、qos_test、self.on_message、make_qos で組み立てた QoS、の購読を作って self.sub に入れることと、on_message で、received という言葉と msg.data をログに出すことです。
+qos_listener.py も、40行ほどのコードです。パラメータと QoS のログは talker と同じで、要の行は、create_subscription に、String 型、qos_test、self.on_message、make_qos の QoS を渡す行です。on_message は、受け取った文をログに出します。
 
 解説の要点です。create_subscription の引数の順は、型、トピックの名前、コールバック、QoS です。create_publisher の、型、名前、QoS とは違い、コールバックが QoS より前に来ます。順を逆にすると、型のエラーになります。on_message は、メッセージが届くたびに呼ばれ、コールバックは spin の中で呼ばれるので、spin に入っていないと何も起きません。self.sub に持っているのは、後から参照できるようにするためで、Python ではノードも内部で持っているので、必須ではありません。make_qos は talker と同じく qos_util.py から読み込むので、同じパラメータの値を渡せば、必ず同じ QoS が組み立てられます。
 
@@ -186,7 +182,7 @@ QoS の設定は、rclcpp::QoS を深さ10 で作り、reliable、best_effort、
 
 ### qos_util.hpp
 
-qos_util.hpp は、30行ほどのヘッダです。全体を、インクルードガードの ifndef、define、endif で囲んでいます。中で、stdexcept と string と rclcpp/rclcpp.hpp を include し、inline の関数の make_qos を定義しています。make_qos は、2つの文字列を const の参照で受け取ります。想定していない値なら、std::invalid_argument を throw します。そのうえで、rclcpp::QoS を深さ10 で作り、文字列が best_effort なら best_effort()、そうでなければ reliable() を呼びます。文字列が transient_local なら transient_local()、そうでなければ durability_volatile() を呼びます。最後に、その QoS を返します。
+qos_util.hpp は、30行ほどのヘッダで、インクルードガードの中に、inline の関数の make_qos を1つ持ちます。想定していない値なら std::invalid_argument を throw し、深さ10 の rclcpp::QoS を作って、文字列に応じたメソッドで設定してから返します。
 
 原文の解説の要点です。Python の版の qos_util.py にあたる、talker と listener の共通の部品で、1か所にまとめる理由も同じです。
 
@@ -200,9 +196,7 @@ inline は、ヘッダに関数の本体まで書くときに付けます。ヘ�
 
 ### qos_talker.cpp
 
-qos_talker.cpp は、50行ほどのコードです。chrono、memory、string と、learn_cpp/qos_util.hpp、rclcpp/rclcpp.hpp、std_msgs/msg/string.hpp を include し、using namespace std::chrono_literals を書きます。
-
-QosTalker というクラスのコンストラクタは、ノードの名前を qos_talker にし、declare_parameter で reliability と durability を、既定の reliable と volatile で宣言して、返ってきた値を、const auto の reliability_str と durability_str に入れます。RCLCPP_INFO で QoS の設定をログに出し、create_publisher で、String 型、qos_test、make_qos の QoS の Publisher を作って pub_ に入れ、1s ごとに on_timer を呼ぶタイマーを作って timer_ に入れます。on_timer は、msg と、count_ を後置で増やしながら std::to_string で文字列にしたものをつないで送り、ログに出します。メンバ変数は、pub_、timer_、0 で初期化した count_ です。main は、フェーズ3-1 と同じ形です。
+qos_talker.cpp は、50行ほどのコードで、骨組みはフェーズ3-1 の talker.cpp と同じです。違いはコンストラクタの前半で、declare_parameter で2つのパラメータを宣言し、返ってきた値を reliability_str と durability_str に入れます。要の行は、create_publisher に、String 型、qos_test、make_qos の QoS を渡す行です。
 
 解説の要点です。
 
@@ -220,7 +214,7 @@ msg と count_ の連結について。msg という文字の並びの方は con
 
 ### qos_listener.cpp
 
-qos_listener.cpp は、40行ほどのコードです。パラメータの宣言とログは talker と同じで、違いは、create_subscription で、String 型、qos_test、make_qos の QoS、そしてラムダ式を渡して、sub_ に入れることです。ラムダ式は、this を取り込み、String のメッセージへの const の参照を受け取って、received と msg.data の c_str() をログに出します。
+qos_listener.cpp は、40行ほどのコードです。パラメータとログは talker と同じで、要の行は、create_subscription に、String 型、qos_test、make_qos の QoS、そして受け取った文をログに出すラムダ式を渡す行です。
 
 解説の要点です。create_subscription の引数の順は、トピックの名前、QoS、コールバックです。Python の版は、コールバックが先で QoS が後なので、言語を行き来するときに取り違えやすい。コールバックのラムダの引数は、メッセージへの const の参照で、コピーが起きません。本文の中で get_logger() を呼ぶために、this の取り込みが要ります。sub_ を SharedPtr のメンバとして持つのは、Publisher と同じ理由で、消えると購読が解かれるからです。memory の include は、SharedPtr のために置いてあります。
 
@@ -258,7 +252,7 @@ ros2 run learn_py の qos_talker と qos_listener で、2-2節の表のとおり
 
 次に、両方を Ctrl+C で止めてから、4番を試します。T1 では、qos_talker を、--ros-args と、-p で reliability を best_effort にして起動します。T2 では、qos_listener を、-p で reliability を reliable にして起動します。
 
-期待する結果は、こうです。talker は publish のログを出し続けますが、listener には received が1行も出ません。その代わり、両方のターミナルに、WARN の警告が出ます。listener の側の警告は、qos_test のトピックで新しい Publisher を見つけたが、それが提供する QoS は合わないので、そこからはメッセージを受け取らない、という内容の英語の文です。talker の側の警告は、新しい Subscription を見つけたが、それが要求する QoS は合わないので、そこへはメッセージを送らない、という内容です。どちらも、最後に、最後に合わなかったポリシーとして、RELIABILITY と示されます。これは Python の版の場合で、C++ の版では、末尾のポリシーの名前が RELIABILITY_QOS_POLICY になります。
+期待する結果は、こうです。talker は publish のログを出し続けますが、listener には received が1行も出ません。その代わり、両方のターミナルに、WARN の警告が出ます。listener の側の警告は、qos_test のトピックで新しい Publisher を見つけたが、それが提供する QoS は合わないので、そこからはメッセージを受け取らない、という内容の英語の文です。talker の側の警告は、新しい Subscription を見つけたが、それが要求する QoS は合わないので、そこへはメッセージを送らない、という内容です。どちらも末尾に、最後に合わなかったポリシーとして、RELIABILITY と示されます。これは Python の版の場合で、C++ の版では、末尾のポリシーの名前が RELIABILITY_QOS_POLICY になります。
 
 警告は、相手を見つけたが、QoS が合わないのでメッセージをやり取りしない、という意味で、最後のポリシーの名前が、食い違っている項目を示します。エラーで止まるわけではないので、ログを見落とすと、何も起きないように見えます。配信する側と受ける側がどうやってお互いを見つけ、QoS を突き合わせているのか、reliable では届いたことをどう確かめているのかは、Tips 集の4節、トピックの通信の裏側にまとめてある、とあります。
 

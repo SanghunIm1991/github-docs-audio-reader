@@ -86,17 +86,7 @@ SetParametersResult が属する rcl_interfaces は、rclpy が依存してい�
 
 ### サンプルコード、param_talker.py
 
-param_talker.py は、60行ほどのコードです。
-
-先頭で、rclpy、rcl_interfaces.msg の SetParametersResult、ExternalShutdownException、Node、String を import します。
-
-ParamTalker というクラスの __init__ は、2つの部分に分かれています。前半では、ノードの名前を param_talker にし、declare_parameter で、message を既定の 'hello' で、period を既定の1.0 で宣言し、get_parameter の value で、2つの値を self.message と self.period に読み込みます。後半では、String 型、param_chatter、10 の Publisher を作り、self.period の周期で on_timer を呼ぶタイマーを作り、最後に add_on_set_parameters_callback で、on_params を登録します。
-
-on_timer は、self.message を data に入れた String を publish し、ログに出します。
-
-on_params は、引数の params を2回ループします。1回目のループでは、名前が period で、値が0.0 以下のものがあれば、すぐに、successful を False、reason を「period must be > 0」にした SetParametersResult を返します。2回目のループでは、名前が message なら self.message を更新し、period なら self.period を更新して、self.timer を cancel してから、新しい周期でタイマーを作り直します。最後に、successful を True にした SetParametersResult を返します。
-
-main は、フェーズ3-1 と同じ形です。
+param_talker.py は、60行ほどのコードです。ブロックは、クラスの __init__、送る処理の on_timer、変更を検証して反映する on_params、そして main です。要の行は3つです。__init__ で、declare_parameter に message と既定の 'hello'、period と既定の1.0 を渡す行。__init__ の最後で、add_on_set_parameters_callback に on_params を渡す行。そして on_params が返す、SetParametersResult の行です。on_params は、2回のループで、まず検証し、問題がなければ反映します。
 
 原文の解説の要点です。
 
@@ -162,11 +152,7 @@ learn_cpp の src に、param_talker.cpp を作ります。
 
 ### サンプルコード、param_talker.cpp
 
-param_talker.cpp は、80行ほどのコードです。chrono、memory、string、vector と、rcl_interfaces/msg/set_parameters_result.hpp、rclcpp/rclcpp.hpp、std_msgs/msg/string.hpp を include します。
-
-ParamTalker というクラスのコンストラクタは、declare_parameter で、std::string の message を既定の "hello" で、double の period を既定の1.0 で宣言して、返ってきた値を message_ と period_ に入れます。続いて Publisher を作り、start_timer() を呼び、最後に add_on_set_parameters_callback に、this を取り込んで on_params を呼ぶラムダを渡して、戻り値を param_cb_ に入れます。
-
-private には、4つのメソッドと、5つのメンバ変数があります。start_timer は、今の period_ を std::chrono::duration の double で包んで、create_wall_timer でタイマーを作り、timer_ に入れます。作り直しにも使います。on_timer は、message_ を送ってログに出します。on_params は、SetParametersResult の変数を作って successful を true にし、1回目のループで、名前が period で as_double() が0.0 以下のものがあれば、successful を false、reason を Python と同じ文字列にして返します。2回目のループで、message なら as_string() で message_ を、period なら as_double() で period_ を更新して、start_timer() を呼び直します。最後に結果を返します。メンバ変数は、message_、period_、pub_、timer_、そして param_cb_ です。main は、これまでと同じ形です。
+param_talker.cpp は、80行ほどのコードです。クラスには、コンストラクタと、private の3つのメソッド、つまりタイマーを作る start_timer、送る on_timer、変更を検証して反映する on_params、そして5つのメンバ変数があります。要の行は3つです。コンストラクタで、declare_parameter に山括弧で型を付けて宣言し、返った値を message_ と period_ に入れる行。add_on_set_parameters_callback の戻り値を、param_cb_ に入れる行。そして start_timer の中で、period_ を std::chrono::duration の double で包んで create_wall_timer に渡す行です。
 
 原文の解説の要点です。Python の版と同じ動作、同じ流れで、言語に固有の点を中心に書かれています。
 
