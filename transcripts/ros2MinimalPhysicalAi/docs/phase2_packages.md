@@ -1,0 +1,323 @@
+<!--
+聞くための原稿（読み上げでは読まれない記録）
+原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase2_packages.md（図は docs/img/phase2_ws_tree.svg と docs/img/phase2_build_flow.svg）
+原文のコミット: 2e2dca072c0c13b2c8a0f27c0190cc18b837d462（2026-10-15）
+作成: 2026-10-20、Claude Code が手作業で作成（原稿化スキルはまだない）
+原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（LICENSE の1と2）。ros2 pkg create が作る雛形の中身（hello.py・hello.cpp・package.xml・CMakeLists.txt の行）は ros2pkg のもので Apache License 2.0（LICENSE の「第三者の著作物」に、tips.md の引用として載っている）。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+方針: 英語の略語や製品名、短いコマンドとファイル名は原文の表記のまま書く。原文の手順のコマンドは、何をするかと要の部分を言葉にした。雛形の中身と、期待する結果（各ツールの表示）は写さず、何が作られ、何が表示されるかを言葉で説明した。図と表（2種類のパッケージの違い、用語の整理、ros2 pkg のサブコマンド、Python版と C++版のまとめ、つまずきやすい点）と、コンパイラの依存の木は、言葉で説明する。文字数の上限は設けない
+省いたもの: URL、日本語の記事の題名（記事が1本あることだけ触れた）、ls -l の表示の日時やサイズ、ビルドの秒数の細かな値
+-->
+
+# フェーズ2: ワークスペースとパッケージの作成とビルド（聞くための原稿）
+
+これは、ros2MinimalPhysicalAi という教材の、フェーズ2 の手順書の話です。ament_python と ament_cmake の空のパッケージを1つずつ作り、ビルドと実行の流れの違いを確かめます。
+
+想定する環境は、WSL2 と Ubuntu 24.04 と ROS2 Jazzy です。colcon、gcc と g++、cmake は、環境構築で ros-dev-tools を入れたときに入っています。所要時間の目安は1コマです。言語は、Python の ament_python と、C++ の ament_cmake の両方を使います。前提として、フェーズ1 で、ros2 run の後にパッケージと実行ファイルを続ける書式に触れていることが必要です。
+
+原文には、位置づけの囲みが2つあります。1つ目。コマンドは、ROS2 Jazzy の実機の雛形、つまり ros2 pkg create のテンプレートを読んで確かめていますが、公式のチュートリアルの本文とは照合できていません。docs.ros.org がボット対策で取得できないためです。出力が違う場合は、実機の表示を優先します。文章と構成は、筆者が自分の言葉で書いたもので、公式のドキュメントは CC BY 4.0 です。2つ目。ros2 pkg create から colcon build、install の中身までの期待する結果は、手順書を作るときに使い捨ての環境で実行して確かめた表示を元にしています。日時、秒数、パスは、環境によって変わります。
+
+この原稿では、ros2 pkg create が作る雛形の中身と、各ツールの表示は書き写さず、何が作られ、何が表示されるかを言葉で説明します。
+
+## 0. 学習目標と完了の条件
+
+完了の条件は5つです。
+
+1つ目。ワークスペースの ros2_ws を作り、ament_python と ament_cmake のパッケージを1つずつ作れる。
+
+2つ目。colcon build、source install/setup.bash、ros2 run、という流れを説明できる。
+
+3つ目。2種類のパッケージで、必要なファイルと、実行ファイルが登録される仕組みの違いを説明できる。
+
+4つ目。--symlink-install を付けるかどうかで、Python の修正がビルドし直さずに反映されるかが変わることを体験する。
+
+5つ目。パッケージと、ビルドの道具の colcon が、何のためにあり、どんな利点があるかを、自分の言葉で説明できる。
+
+## 1. 全体像
+
+まず、なぜパッケージとビルドの仕組みが要るのか、です。フェーズ1 では、ros2 run turtlesim turtlesim_node と打つだけで、turtlesim が起動しました。プログラムのファイルがどこにあるかは、一度も指定していません。これは、turtlesim がパッケージという単位で /opt/ros/jazzy に入っていて、ros2 run などの ROS2 の道具が、パッケージの名前から、その中の実行ファイルや設定のファイルを探せるようになっているからです。
+
+ノードを1つ試すだけなら、パッケージを作らなくてもかまいません。rclpy を使う Python のファイルは、python3 talker.py のように直接実行しても、ノードとして動きます。けれども、ロボットのソフトウェアは、すぐに1つのファイルでは収まらなくなります。Python のノードと C++ のノードが混ざり、自作のメッセージの型を両方の言語から使い、複数のノードを launch ファイル、これはフェーズ4 ですが、それでまとめて起動し、ノードの設定の値であるパラメータを書いたファイル、これはフェーズ3-3 ですが、それを読みます。それを、ほかの人の環境でも同じように動かしたい。ファイルを手で置き、言語ごとに違う手順でビルドし、パスを1つずつ指定していたのでは、すぐに手に負えなくなります。
+
+この問題を、ROS2 は2つの仕組みで解いています。
+
+1つ目はパッケージで、ソースと設定のファイルを、名前の付いた1つのまとまりにします。package.xml に、名前と、ほかのどのパッケージに依存するかを書きます。ビルドすると、実行ファイルとして登録したものは、install の下の lib の、パッケージ名のフォルダに入ります。launch ファイルや設定のファイルも、インストールの指定を書いておけば、share の下の、パッケージ名のフォルダに入ります。指定の書き方はフェーズ4 で扱います。どちらも決まった場所なので、道具が名前から探せます。
+
+2つ目は、ビルドの道具の colcon です。ワークスペース、つまり自分のパッケージをまとめて置いてビルドするフォルダの、src にある、たくさんのパッケージを、1つのコマンドでビルドし、実行に使う成果物を install に入れます。Python のパッケージの ament_python と、C++ のパッケージの ament_cmake の違いを吸収し、どちらも colcon build で扱えます。
+
+この仕組みには、5つの利点があります。
+
+1つ目は、名前で呼べることです。自作のノードも、turtlesim と同じく、ros2 run の後にパッケージと実行ファイルを続けて起動でき、launch ファイルからも、パッケージの名前で実行ファイルや設定のファイルを指せます。ファイルの置き場所が変わっても、起動の書き方は変わりません。
+
+2つ目は、依存の順にビルドされることです。colcon は、各パッケージの package.xml の依存を読み、依存される側から順にビルドします。自作のメッセージの型のパッケージと、それを使うノードのパッケージを同じワークスペースに置いても、正しい順でビルドされます。
+
+3つ目は、言語が混ざっても手順が同じことです。Python と C++ のパッケージを、同じ colcon build と source install/setup.bash で扱えます。フェーズ3 以降、同じ動きのノードを両方の言語で書いて、同じトピックでつなぎます。
+
+4つ目は、公式のパッケージの上に重ねられることです。source install/setup.bash は、/opt/ros/jazzy の公式のパッケージの上に、自分のワークスペースのパッケージを重ねて見えるようにします。下の層をアンダーレイ、上に重ねる層をオーバーレイと呼びます。公式のものと自作のものを、区別せずに同じ書き方で使えます。
+
+5つ目は、共有しやすいことです。パッケージは、そのままほかの人に渡せる単位です。GitHub などで公開されているパッケージは、src に置いてビルドすれば使えます。package.xml に依存が書いてあるので、足りないものを道具で入れることもできます。その道具は rosdep で、package.xml の依存を読んで、足りないものを主に apt で入れます。この教材では使いません。公式のパッケージも、ros-jazzy-turtlesim のように、パッケージの単位で apt で配られています。
+
+代わりに、書いたものを動かす前に、ビルドと source の手間が入ります。この手間の中身、つまりどこに何が作られ、何が登録されるかを、このフェーズで1つずつ確かめます。
+
+### 1-1. ワークスペースの構成
+
+原文の図は、ワークスペースの構成を表す木の形の図です。SVG と mermaid の版があります。
+
+一番上に、ros2_ws、つまりワークスペースの箱があります。そこから下へ4本の矢印が分かれ、横一列に4つの箱が並びます。左から、src、build、install、log です。src には「自分で書くもの、Git で管理する」、build には「中間の生成物、Git の管理の外」、install には「実行に使う成果物、Git の管理の外」、log には「ビルドのログ、Git の管理の外」と添えられています。さらに src から下へ2本の矢印が分かれ、learn_py の箱と learn_cpp の箱があります。learn_py は ament_python、learn_cpp は ament_cmake です。
+
+色にも意味があります。ros2_ws と src、それに learn_py と learn_cpp の箱は青で、build、install、log の3つの箱だけが灰色です。自分で書くものと、ビルドで作られるものが、色で分かれています。
+
+一般に、ROS2 のワークスペースで Git の管理の対象にするのは src だけで、build、install、log の生成物は含めません。この教材のリポジトリでも、直下の .gitignore に登録してあります。なお、練習用のワークスペースは、教材のリポジトリとは別の場所、つまりホームディレクトリの下の ~/ros2_ws に作ります。教材のリポジトリを clone した場合も、練習のコードが混ざることはありません。練習のコードも Git で管理したい場合の方法は、2-8節で扱います。
+
+### 1-2. ビルドと実行の流れ
+
+原文の図は、ソースからノードの起動までの流れです。これも SVG と mermaid の版があります。SVG では、5つの箱が上から下へ縦に並び、矢印でつながっています。
+
+一番上の箱は「src のソース」です。そこから colcon build という矢印で、2つ目の箱「build、中間」へ進みます。そこから、ラベルの無い矢印で、3つ目の箱「install、成果物」へ進みます。そこから source install/setup.bash という矢印で、4つ目の箱「環境変数に登録、AMENT_PREFIX_PATH など」へ進みます。最後に、ros2 run パッケージ 実行ファイル、という矢印で、5つ目の箱「ノードが起動」へ進みます。
+
+source install/setup.bash を忘れると、ros2 run が、パッケージが見つからない、と言います。ビルドし直した後だけでなく、新しいターミナルを開くたびに必要です。~/.bashrc には、/opt/ros/jazzy の source だけが入っているからです。
+
+### 1-3. 2種類のパッケージの違い
+
+この節の表は、2節で作る2種類のパッケージの違いを、先に並べたものです。表に出てくるファイルや設定は、2-2節から2-7節で実物を見ながら確かめるので、ここでは名前を眺める程度でよい、とあります。原文は、表の前に、用語を短く説明しています。
+
+setup.py と setup.cfg は、Python のパッケージのビルドとインストールの設定です。setup.cfg は、インストール先などの細かな設定を分けて書いたもので、この教材では作られたまま使い、編集しません。役割と、編集が要る場面は、Tips 集の10節にあります。install_requires は、setup.py に書く、動かすのに要る Python のパッケージの一覧です。
+
+package.xml は、パッケージの名前、メンテナ、依存などを書く、ROS2 のパッケージの設定ファイルです。依存は depend のタグで書きます。
+
+entry_points の console_scripts は Python の、add_executable と install(TARGETS ...) は C++ の、ros2 run で起動できる実行ファイルとして登録する書き方です。find_package は、C++ で使う外部のパッケージを探して使えるようにする命令です。
+
+--symlink-install は、colcon build に付けるオプションです。ソースを install へ写す代わりに、リンク、つまり参照でつなぎます。Python なら、ソースを書き換えるだけで、ビルドし直さずに反映されます。
+
+表は、観点、ament_python、ament_cmake の3列で、6行あります。
+
+1行目、ビルドの設定。ament_python は setup.py と setup.cfg。ament_cmake は CMakeLists.txt。
+
+2行目、依存の宣言。ament_python は package.xml の depend で、加えて setup.py の install_requires。ament_cmake は package.xml の depend と、CMakeLists.txt の find_package。
+
+3行目、ソースの置き場所。ament_python は、パッケージ名のフォルダ、つまり Python のモジュール。ament_cmake は src と include。
+
+4行目、実行ファイルの登録。ament_python は setup.py の entry_points の console_scripts。ament_cmake は CMakeLists.txt の add_executable と install(TARGETS ...)。
+
+5行目、コンパイル。ament_python は無しで、ソースをそのまま置く。ament_cmake は有りで、g++ を通して機械語にする。
+
+6行目、修正した後の再ビルド。ament_python は、--symlink-install なら不要。ament_cmake は必須。
+
+#### 補足: C++ のコンパイラはどこから来て、いつ使われるか
+
+C++ のコンパイラを自分で入れた覚えが無くても、colcon build で C++ のパッケージがビルドできるのは、環境構築で入れた ros-dev-tools が、依存としてコンパイラの一式を連れてきているからです。
+
+原文は、その依存を木の形で示しています。一番上が ros-dev-tools で、その下に ros-build-essential があります。ros-build-essential の下には2つあり、1つは build-essential、もう1つは cmake です。build-essential は、Ubuntu の標準の、C と C++ の開発に最低限必要なものの一式で、その下に4つあります。C のコンパイラの gcc、C++ のコンパイラの g++、ビルドの手順を実行する make、標準の C のライブラリのヘッダなどの libc6-dev です。cmake は、ビルドの設定の CMakeLists.txt を解釈する道具です。依存は、apt-cache depends にパッケージの名前を付けて、1段ずつ確かめられます。
+
+Ubuntu 24.04 では、g++ の実体は g++-13、つまり GCC の13系です。g++ --version を実行すると、13.3.0 という版が表示されます。末尾の細かな版数は、更新によって変わります。
+
+colcon build の中では、コンパイラは3つの順で呼び出されます。
+
+1つ目。colcon が、パッケージの種類が ament_cmake であるのを見て、cmake を呼ぶ。
+
+2つ目。cmake が CMakeLists.txt を読み、ビルドの手順、つまり Makefile を、build の learn_cpp のフォルダの中に作る。このとき、使うコンパイラとして /usr/bin/c++ を選ぶ。/usr/bin/c++ は、システムの既定の C++ のコンパイラを指す別名で、Ubuntu の標準では g++ につながっている。
+
+3つ目。make が Makefile に従って g++ を呼び、.cpp のファイルを実行ファイルにする。
+
+どのコンパイラが選ばれたかは、一度ビルドした後に、build の learn_cpp にある CMakeCache.txt から、CMAKE_CXX_COMPILER の行を grep で探して確かめられます。/usr/bin/c++ と記録されています。
+
+コンパイラを使うのは、ビルドのときだけです。ros2 run や ros2 launch でノードを動かすときには使いません。実行されるのは、ビルドででき上がった実行ファイルです。Python のパッケージは、そもそもコンパイルをしないので、コンパイラとは関わりません。この学習では、コンパイラを意識して選ぶ場面は無く、既定の g++ のままでよい、とあります。Clang などの別のコンパイラに切り替える方法もありますが、扱いません。
+
+### 1-4. 用語の整理: 実行ファイル、ノード、launch ファイル
+
+この手順書で言う実行ファイルは、ros2 run の2つ目の引数に書ける名前のことです。Python なら setup.py の entry_points で、C++ なら CMakeLists.txt の add_executable で、ビルドのときに登録され、ros2 pkg executables で一覧できる、パッケージの上での単位です。実体は、Python の短い包みのスクリプトか、コンパイル済みの ELF のバイナリで、1つを ros2 run すると、1つのプロセスが立ち上がります。
+
+これは、ノードや launch ファイルとは別の軸の考えで、原文は、概念、何の単位か、どこで見えて使うか、の3列の表で整理しています。3行あります。
+
+1行目、実行ファイル。ビルドとパッケージの単位で、プロセスとして起動できるもの。ros2 pkg executables と、ros2 run で見えて使う。
+
+2行目、ノード。実行するとき、つまりランタイムの単位。コードの上では、ROS2 のライブラリ、Python なら rclpy、C++ なら rclcpp が用意する Node クラスのインスタンスで、フェーズ3-1 で書く。ros2 node list で見え、トピック、サービス、パラメータの持ち主になる。
+
+3行目、launch ファイル。複数の実行ファイル、つまり複数のノードを、まとめて起動する設定の単位。ros2 launch で使い、フェーズ4 で扱う。
+
+この手順書で作る雛形の hello は、文字を表示するだけで、まだノードを作りません。フェーズ3-1 以降のサンプルのように、1つの実行ファイルの main 関数が1つのノードを作って spin する、というのが、最小の構成では最も単純で典型的な形です。spin は、届いたメッセージやタイマーに応じてコールバックを呼びながら、ノードを動かし続ける処理です。けれども、実行ファイルとノードは、厳密には1対1ではありません。1つの実行ファイル、つまり1つのプロセスが、複数のノードを作って同時に spin することもできます。逆に、ノードだけを ros2 run で直接起動する方法はなく、必ず、それを起動する実行ファイルを通します。launch ファイルはさらに1段上の層で、ros2 pkg executables には出てこず、ros2 run の対象にもなりません。ros2 launch 専用のファイルです。フェーズ4 で、launch ファイルが複数の実行ファイル、つまりノードをまとめて起動する様子を、実際に書いて確かめます。
+
+## 2. 手順
+
+練習用のワークスペースは、ホームディレクトリの下に ~/ros2_ws として作ります。名前は、ROS2 の公式のチュートリアルが使っている ros2_ws に合わせました。名前そのものに決まりは無く、colcon build を実行したフォルダがワークスペースになります。以降の手順書で ros2_ws と書いたときは、このフォルダを指します。
+
+### 2-1. ワークスペースを作る
+
+mkdir -p で ~/ros2_ws の下の src までをまとめて作り、cd でその src に移ります。期待する結果は、何も表示されず、プロンプトが戻るだけです。pwd を実行すると、ホームディレクトリの下の ros2_ws の src の場所が表示されます。ros2_ws の src に置いたものが、パッケージとして扱われます。
+
+### 2-2. Python のパッケージを作る
+
+コマンドは ros2 pkg create で、オプションを並べて、learn_py というパッケージを作ります。オプションは5種類です。--build-type を ament_python に。--license を Apache-2.0 に。--maintainer-name を learner に、--maintainer-email を noreply@example.com に。--dependencies に rclpy と std_msgs。そして --node-name を hello にします。最後にパッケージの名前、learn_py を書きます。
+
+期待する結果は、まず設定の内容の確認が出て、続いて、作ったファイルが1行ずつ表示されることです。設定の内容の確認では、パッケージの名前、作る先のフォルダ、パッケージの形式の版、版数、説明、メンテナ、ライセンス、ビルドの種類、依存、ノードの名前が並びます。メンテナの行がダミーの値になっていること、依存の行に rclpy と std_msgs が入っていることを、ここで確かめられます。
+
+オプションの意味は3つ説明されています。
+
+--dependencies は、package.xml に depend のタグとして書かれます。後の手順で std_msgs を使うので、今のうちに入れておきます。
+
+--node-name hello では、動作の確認のための最小の実行ファイル、hello の雛形が作られます。文字を表示するだけで、ROS2 の機能はまだ使いません。
+
+そして、メンテナの名前とメールは、必ず明示します。省くと、コマンドが Git の設定などから自動で補う場合があり、実際のメールアドレスがファイルに入るおそれがあります。この教材のリポジトリは公開を前提にしているので、learner と noreply@example.com のようなダミーを使います。
+
+次に、作られたものを確かめます。find で learn_py の下のファイルを一覧にして sort で並べ、cat で package.xml と setup.py の中身を表示します。
+
+find の期待する結果は、10個のファイルです。ライセンスの LICENSE、内側の learn_py のフォルダの __init__.py と hello.py、package.xml、resource のフォルダの learn_py という名前のファイル、setup.cfg、setup.py、そして test のフォルダの3つのテストのファイルです。
+
+読み方は3つです。1つ目。learn_py の下に、さらに learn_py のフォルダがあり、同じ名前が2段重なります。外側はパッケージのフォルダ、内側は Python のモジュール、つまり import learn_py で読み込まれる側です。ノードのコードは内側に置きます。2つ目。hello.py の中身は、パッケージの名前を入れた短い挨拶の文を print で表示するだけの、main 関数です。3つ目。test のフォルダの3つのファイルは、著作権の表示、コードの書式、docstring の書式を検査する、雛形のテストです。
+
+package.xml に、rclpy と std_msgs の depend の行が2行あれば、--dependencies が効いています。test_depend の行しか無い場合は指定が抜けているので、この2行を、license の行の後ろに手で足します。フェーズ3-1 でも触れます。
+
+### 2-3. C++ のパッケージを作る
+
+コマンドは、2-2節とほぼ同じ形の ros2 pkg create です。違いは、--build-type を ament_cmake に、--dependencies を rclcpp と std_msgs にして、パッケージの名前を learn_cpp にすることです。ライセンス、メンテナ、--node-name hello は同じです。続けて、find で learn_cpp の下のファイルを一覧にし、cat で package.xml と CMakeLists.txt の中身を表示します。
+
+find の期待する結果は、ファイルが4つだけで、Python の版より少ないことです。CMakeLists.txt、LICENSE、package.xml、そして src のフォルダの hello.cpp です。
+
+読み方は3つです。1つ目。src の hello.cpp の中身は、パッケージの名前を入れた短い文を printf で表示するだけの main 関数で、ROS2 の機能はまだ使っていません。2つ目。package.xml には、ビルドの道具への依存として ament_cmake を書いた buildtool_depend の行と、rclcpp と std_msgs の depend の行が入ります。3つ目。CMakeLists.txt には、find_package で rclcpp などの依存を読み込む行と、add_executable と install(TARGETS ...) で hello を実行ファイルとして登録する行が入ります。
+
+原文の補足です。--node-name は、作る実行ファイルの名前を指定するだけのオプションです。ros2 pkg create の help でも、空の実行ファイルの名前、としか説明されておらず、選べる種類の一覧はありません。ノードの言語や、雛形の中身を決めているのは --build-type の方です。ament_python なら Python の雛形、ament_cmake か cmake なら C++ の雛形、ament_cargo なら Rust です。2-2節と2-3節で同じ --node-name hello を指定しているのは、どちらも、動作の確認のための最小の実行ファイルという同じ役割を、--build-type の違うテンプレートで作っているからです。
+
+課題1 は、2つのパッケージの package.xml を見比べることです。C++ の版にだけ ament_cmake の buildtool_depend があり、Python の版には buildtool_depend が無いこと。そして、export の中の build_type が、ament_python と ament_cmake で違うことを確かめます。
+
+### 2-4. ビルドする
+
+cd で ~/ros2_ws に移り、colcon build --symlink-install を実行します。
+
+注意は3つです。1つ目。必ず、ワークスペースの直下、つまり ros2_ws で実行します。src の中で実行すると、build などが意図しない場所にできます。2つ目。初めのビルドの時間は環境によります。検証の環境では、約10秒でした。応答が遅い、止まる、という場合だけ、メモリの不足を疑って、--parallel-workers 2 を付けて、並列の数を絞ります。検証の環境では、この絞り込みは要りませんでした。3つ目。Python のパッケージのビルド中に、SetuptoolsDeprecationWarning という、非推奨の警告が出ることがあります。ビルドが成功していれば、この段階では無視してかまいません。警告の意味と、無視してよい理由は、Tips 集の3節にあります。
+
+期待する結果は、2つのパッケージが終わったという Summary の行が出ることで、それが出れば成功です。その前に、learn_cpp と learn_py の Starting の行が2行続けて出ます。2つのパッケージは並行してビルドされるからです。終わった方から Finished の行が出ます。C++ は、コンパイルがある分、遅れて終わることが多い、とあります。
+
+ビルドの後、ls でワークスペースの中身を確かめます。期待する結果は、元からある src に、ビルドで作られた build、install、log の3つが加わって、4つが並ぶことです。
+
+### 2-5. 環境に登録して実行する
+
+source install/setup.bash を実行し、ros2 run learn_py hello と、ros2 run learn_cpp hello を実行します。期待する結果は、それぞれの雛形が、パッケージの名前を入れた短い文を1行ずつ表示することです。文言が違っていても、実行できていればよい、とあります。原文には、2026年9月22日の時点で、実機で、learn_py と learn_cpp のどちらも期待どおりの表示だったと確かめた、という記録があります。
+
+続いて、source の効果を確かめる4つのコマンドを実行します。
+
+1つ目は、ros2 pkg list の出力を grep で learn に絞るもの。期待する結果は、learn_cpp と learn_py の2行です。
+
+2つ目は、ros2 pkg prefix learn_py。期待する結果は、ワークスペースの install の下の learn_py の場所です。
+
+3つ目と4つ目は、ros2 pkg executables に learn_py と learn_cpp をそれぞれ付けたもの。期待する結果は、どちらも、パッケージの名前と hello が並んだ1行です。
+
+ros2 pkg executables は、パッケージの名前と実行ファイルの名前の組で並べます。これがそのまま、ros2 run の2つの引数になります。source をしていないターミナルでは、ros2 pkg list を learn で絞っても、何も表示されません。ROS2 本体のパッケージしか見えないからです。
+
+課題2 は、新しいターミナルを開き、source しないまま ros2 run learn_py hello を試すことです。パッケージの learn_py が見つからない、というエラーになることを確かめてから、source install/setup.bash をして、もう一度実行します。
+
+#### ros2 pkg のサブコマンドの補足
+
+ここまでで使った4つのサブコマンドの役割とオプションを、原文は、サブコマンド、役割、主なオプション、の3列の表にしています。それぞれの help で確かめたもので、Jazzy の時点の内容です。4行あります。
+
+1行目は create で、新しいパッケージの雛形を作ります。2-2節と2-3節で使いました。主なオプションは、言語とビルドの系統を選ぶ --build-type で、cmake、ament_cmake、ament_cargo、ament_python から選びます。ほかに、雛形の実行ファイルの名前の --node-name、雛形のライブラリの名前で C++ だけの --library-name、package.xml の depend になる --dependencies、--license、--maintainer-name と --maintainer-email、作る先のフォルダの --destination-directory、package.xml のスキーマの版で2か3を選ぶ --package-format があります。
+
+2行目は list で、source 済みの環境から見えているパッケージの名前を一覧にします。オプションは、help の -h だけです。今回のように grep で絞り込む使い方が一般的です。
+
+3行目は prefix で、そのパッケージのインストール先の場所を表示します。--share を付けると、launch ファイルや設定などの共有のファイルが入る、share の下のパッケージのフォルダを表示します。
+
+4行目は executables で、そのパッケージが持つ実行ファイルの名前、つまり ros2 run の2つ目の引数に使える名前を一覧にします。パッケージの名前を省くと、すべてのパッケージの分を表示します。--full-path を付けると、インストール先の絶対パスも表示します。
+
+list、prefix、executables は、どれも読み取りだけで、副作用はありません。ros2 run をする前の確認や、デバッグに使います。
+
+### 2-6. install の中身を見る
+
+実行ファイルがどこにできているかを見て、2種類の違いを実感します。4つのコマンドを実行します。ls -l で、install の下の、learn_py の lib の learn_py のフォルダと、learn_cpp の lib の learn_cpp のフォルダを、それぞれ一覧にします。cat と head -20 で、Python の版の hello の先頭の20行を表示します。そして、file -L で、C++ の版の hello が何かを調べます。
+
+期待する結果を説明します。Python の版のフォルダには、hello という、実行の権限の付いた、1キロバイトに満たない小さなファイルが1つあります。C++ の版のフォルダの hello は、行の頭が l のシンボリックリンクで、矢印の先は、ワークスペースの build の learn_cpp の hello です。Python の版の hello の中身は、1行目が #!/usr/bin/python3 で、2行目が、setuptools が作った entry point のスクリプトであることを示すコメントで、その後に import の行が続きます。file -L の結果は、ELF の64ビットの実行ファイルで、x86-64 用、という内容です。
+
+読み方は2つです。
+
+1つ目。Python の版の hello は、Python の main 関数を呼び出すだけの、短いスクリプトです。setup.py の entry_points から作られます。1行目の #!/usr/bin/python3 は、このファイルを Python で実行する、という指定です。
+
+2つ目。C++ の版の hello は、コンパイル済みのバイナリです。--symlink-install を付けているので、install にあるのは、build の learn_cpp の hello へのシンボリックリンクになります。ls -l の行の頭が l で、末尾に矢印とリンクの先が付くのが、その印です。file に、リンクの先を調べさせる -L を付けると、実体が ELF、つまり Linux の実行の形式だと分かります。-L を付けないと、シンボリックリンクだ、とだけ表示されます。
+
+課題3 は、--symlink-install を付けた場合に、Python のソースがどうつながっているかを、ls -l build/learn_py で確かめることです。build の learn_py の中に、src の learn_py の内側の learn_py を指す、シンボリックリンクがあります。build の側から、src のコードを直接指しているわけです。さらに、install の learn_py の lib の python3.12 の site-packages には、learn-py.egg-link という小さなファイルがあり、cat で読むと、中身は build の learn_py の場所を示しています。つまり、install から build、build から src とたどって、編集中のソースがそのまま使われます。
+
+### 2-7. 修正の反映を体験する、--symlink-install の効果
+
+ここで初めて、練習の環境のファイルを書き換えます。ファイルを開いて書き換える方法、つまり nano を使う方法と、VS Code を使う方法は、コードの置き方の手順書にまとめてあります。すでにあるファイルを開いて書き換える手順は、その4節を、hello.py に読み替えればよい、とあります。
+
+まず Python で、これはビルドし直しが要りません。learn_py の内側の learn_py の hello.py の、print の文言を書き換え、ビルドせずに ros2 run learn_py hello を実行します。期待する結果は、例えば print の文言を Hello, edited! に書き換えた場合、ビルドをしていなくても、Hello, edited! と表示されることです。
+
+次に C++ で、これはビルドし直しが必須です。learn_cpp の src の hello.cpp の文言を書き換えます。そして、4つのコマンドを順に実行します。まず、ビルドする前に ros2 run learn_cpp hello。次に、cd で ~/ros2_ws に移る。それから、colcon build --symlink-install に、--packages-select learn_cpp を付けて実行する。最後に、ビルドした後に、もう一度 ros2 run learn_cpp hello。
+
+期待する結果は、こうです。1回目の ros2 run では、書き換える前の文がそのまま出ます。ソースを書き換えても、実行されるのはコンパイル済みの古いバイナリだからです。colcon build の後の2回目で、書き換えた文言に変わります。ビルドの表示は、learn_cpp の Starting と Finished、そして1つのパッケージが終わったという Summary、の3つになります。
+
+ポイントは2つです。1つ目。--packages-select にパッケージの名前を付けると、そのパッケージだけをビルドします。C++ は時間がかかるので、普段はこれを使うと速い。2つ目。新しい実行ファイルを足す場合、つまり setup.py の entry_points や CMakeLists.txt を変えた場合は、--symlink-install でも、ビルドし直しが必要です。
+
+原文の補足に、なぜ C++ のビルドし直しにも --symlink-install を付けるのか、が書かれています。C++ のコンパイル済みの実行ファイルは、src に実体がありません。ソースからコンパイルして初めて作られるからです。そのため、--symlink-install を付けても、ビルドし直しが不要にはなりません。install の learn_cpp の hello は、src ではなく build の learn_cpp の hello へのシンボリックリンクになるだけで、build の側の中身は、どのみちコンパイルし直しが要ります。このコマンドだけを見れば、付けても付けなくても、動きは変わりません。
+
+それでも付ける理由は、ワークスペース全体のインストールの方式をそろえるためです。--packages-select で対象を絞っている間は、ほかのパッケージに影響しません。けれども、--packages-select を付け忘れて、対象の無い、つまりワークスペース全体の colcon build を実行すると、すでにシンボリックリンクになっていた learn_py の側が、実体のコピーに戻ってしまいます。そして、Python は編集がビルド無しで反映される、という状態が、黙って壊れます。これは実機の検証で確かめた、とあります。毎回同じ形のコマンドを使い回すことで、この事故を防いでいます。なお、C++ のパッケージでも、package.xml や、CMake が作るものの一部、つまり install の learn_cpp の share の下の一部は、シンボリックリンクになります。実行ファイル以外では、--symlink-install に意味があります。
+
+課題4 は、--symlink-install を付けずに colcon build をして、Python のソースを書き換えても反映されないことを確かめることです。確かめた後は、rm -rf で build、install、log を消して、--symlink-install を付けてビルドし直します。消すのは、ros2_ws の中だけにします。
+
+### 2-8. 練習のコードを Git で管理する（任意）
+
+この節は任意で、練習のコードの変更の履歴を残したい場合だけ行います。2-1節で作った ~/ros2_ws は、作っただけでは Git の管理の下にない、ただのフォルダです。
+
+練習のコードを Git で管理するには、ワークスペースの ros2_ws を、そのまま Git のリポジトリにします。1-1節のとおり、管理するのは src だけで、生成物の build、install、log は、.gitignore で除きます。
+
+コマンドは4つです。cd で ~/ros2_ws に移る。git init -b main を実行する。printf で、build、install、log の3行を書いた .gitignore を作る。そして、git status --short を実行する。
+
+期待する結果は、git init が、ros2_ws の .git に空の Git のリポジトリを作った、と表示し、git status --short が、.gitignore と src の2行を、どちらも疑問符2つの印で表示することです。
+
+読み方は3つです。1つ目。git init -b main は、ros2_ws を Git のリポジトリにして、最初のブランチの名前を main にします。-b main を付けないと、ブランチの名前についての長いヒントが表示されます。2つ目。printf の行は、build、install、log の3行を書いた .gitignore を作ります。3つ目。git status --short の疑問符2つは、まだ管理していないファイルの印です。src と .gitignore だけが出て、build、install、log が出なければ、除外が効いています。src の中身が1行にまとまっているのは、まだ1つもコミットしていないフォルダを、Git が中身を広げずに表示するからです。-uall を付けると、ファイルごとに出ます。フェーズ3-3 から4 の途中では、一時的に config のフォルダも出ますが、フェーズ4 で learn_bringup の config へ移すので、コミットしなくてよい、とあります。
+
+教材のリポジトリを clone した場合も、~/ros2_ws は教材のフォルダの外にあるので、影響しません。
+
+練習のコードを Git で管理し、いつか公開する可能性があるなら、コミットの前に、雛形に書いた連絡先を確かめます。ros2_ws で、grep -n で maintainer の行を探します。対象は、2つのパッケージの package.xml と、learn_py の setup.py です。
+
+期待する結果は、2-2節と2-3節のコマンドで作った場合、2つの package.xml のどちらにも、メールが noreply@example.com で名前が learner の maintainer の行があり、setup.py にも、maintainer が learner、maintainer_email が noreply@example.com の2行があることです。
+
+メールアドレスが noreply@example.com で、実際のメールアドレスが入っていなければよい、とあります。確かめられたら、git add で .gitignore と src を足して、git commit でコミットします。初めて Git でコミットする環境では、先に git config --global で user.name と user.email を設定する必要があります。公開する可能性があるなら、ここにも実際のメールアドレスではなく、GitHub が用意する公開用の noreply のアドレスを使います。
+
+## 3. Python の版と C++ の版の違いのまとめ
+
+このフェーズで確かめた違いを、原文は、観点、Python の ament_python、C++ の ament_cmake、の3列の表で総括しています。4行あります。
+
+1行目、作るコマンドの差。Python は --build-type ament_python。C++ は --build-type ament_cmake。
+
+2行目、実行ファイルを登録する場所。Python は setup.py の entry_points の console_scripts。C++ は CMakeLists.txt の add_executable と install(TARGETS ...)。
+
+3行目、install の中の実行ファイルの正体。Python は、ソースを呼び出す短い包みの Python スクリプト。C++ は、コンパイル済みの ELF のバイナリ。
+
+4行目、ソースを直した後に必要な操作。Python は、--symlink-install なら不要で、すぐ反映される。C++ は必須で、g++ でのコンパイルし直しが要る。
+
+コンパイルという工程が挟まる分、C++ は、編集してすぐ実行できる Python に比べて、試しては直す、という繰り返しの周期が長くなります。一方で、コンパイルのときに型や関数の形の誤りを見つけられるのは、C++ の利点です。実行するまで気づかない Python との違いです。
+
+## 4. つまずきやすい点
+
+原文では、症状と、確かめることの2列の表で、6行あります。
+
+1行目。learn_py のパッケージが見つからない、と言われる場合は、source install/setup.bash をしたか。別のターミナルで、ros2_ws の install を読み込んだかを確かめる。
+
+2行目。colcon が command not found になる場合は、sudo apt install で python3-colcon-common-extensions を入れる。colcon --help で確かめる。
+
+3行目。ビルドの途中で応答が遅い、止まる場合は、メモリの不足の可能性がある。--parallel-workers を1か2に絞る。
+
+4行目。ros2 run で、実行ファイルが見つからない、と言われる場合は、entry_points や install(TARGETS ...) の書き方と、ビルドした後の source を確かめる。
+
+5行目。Python の修正が反映されない場合は、--symlink-install を付けてビルドしたか。実行ファイルを足した場合は、ビルドし直しが必要。
+
+6行目。警告がたくさん出る場合は、失敗、つまり Failed かどうかだけを確かめる。Summary の行が判断の基準になる。
+
+## 5. 次のフェーズへ
+
+フェーズ3、ノードの基本では、この2つのパッケージ、learn_py と learn_cpp に、Publisher と Subscriber、パラメータ、サービス、アクションのノードを、同じ仕様で足していきます。最初は、フェーズ3-1 で、Publisher と Subscriber を書きます。
+
+## 6. 公式ドキュメントと参考資料
+
+確認の状況が書かれています。2026年9月20日の時点で、下の資料は企画の文書に載せた URL で、今回は確かめ直していません。docs.ros.org は、ボット対策で本文の取得が拒否されます。コマンドとテンプレートの内容は、WSL に入れた ROS2 Jazzy の /opt/ros/jazzy にある雛形を、直接読んで確かめました。
+
+公式の資料は4つです。ROS 2 Jazzy の、クライアントライブラリの初心者向けのチュートリアルの目次で、ワークスペースの作り方、パッケージの作り方、colcon の各チュートリアルは、ここからたどります。colcon のドキュメント。Jazzy の ament_cmake の利用者向けのドキュメント。そして、Jazzy の ament_cmake_python の利用者向けのドキュメントで、ここには、純粋な Python のパッケージには ament_python を使う、という旨の記載があります。
+
+日本語の資料として、colcon を解説した記事が1本挙げられています。記事は個人による非公式の解説で、版によって違う場合があり、公式のドキュメントと食い違う場合は公式を優先する、とあります。
+
+以上で、フェーズ2 の手順書の話を終わります。
+
+## 出典について
+
+この原稿は、SanghunIm1991 さんの [ros2MinimalPhysicalAi の「フェーズ2 手順書: ワークスペースとパッケージ作成・ビルド」](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/phase2_packages.md)を、聞くために要約・意訳したものです。図の [phase2_ws_tree.svg](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/phase2_ws_tree.svg) と [phase2_build_flow.svg](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/phase2_build_flow.svg) は、言葉で説明しました。元にしたのは、[2026年10月15日の版](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/2e2dca072c0c13b2c8a0f27c0190cc18b837d462/docs/phase2_packages.md)です。原文の文章と図と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
+
+原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。
+
+原文のうち、ros2 pkg create が作る雛形の中身（hello.py、hello.cpp、package.xml、CMakeLists.txt の行）は、[ros2cli](https://github.com/ros2/ros2cli) の ros2pkg（Apache License 2.0）のものです。この原稿では、それを写さず、何が書かれているかを言葉で説明しました。表示の例は、各ツールの表示を言葉で説明したものです。
