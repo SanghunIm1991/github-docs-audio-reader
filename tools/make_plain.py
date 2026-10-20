@@ -8,6 +8,7 @@
 
 使い方: py -3.13 tools/make_plain.py [--max-chars 3000]
 標準ライブラリだけを使い、外部との通信はしない。plain/ の中の .txt は毎回作り直す。
+Gemini Notebook を使う間は実行しない（2026-10-20 から。CLAUDE.md を参照）。
 """
 
 import argparse
