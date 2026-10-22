@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase1_cli_turtlesim.md（図は docs/img/phase1_topic_flow.svg と docs/img/phase1_four_concepts.svg）
 原文のコミット: 02948595c660129f78d3381c9e5c374f64bcdad0（2026-10-15）
 作成: 2026-10-19、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（LICENSE の1と2）。公式チュートリアルの例と同じ値のコマンド（ROS 2 Documentation、CC BY 4.0）と、ros2 interface show で表示する型の定義（turtlesim は BSD License、geometry_msgs は common_interfaces の Apache License 2.0）は、LICENSE の「第三者の著作物」にある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（それぞれ LICENSE の2と1）。公式チュートリアルの例と同じ値のコマンド（ROS 2 Documentation、CC BY 4.0）と、ros2 interface show で表示する型の定義（turtlesim は BSD License、geometry_msgs は common_interfaces の Apache License 2.0）は、LICENSE の「第三者の著作物」にある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、短いコマンドは原文の表記のまま書く。公式チュートリアルと同じ値のコマンドの行と、型の定義、期待する結果（各ツールの表示）は写さず、何をするか、何が表示されるかを言葉で説明した。図と表（切り分け、ターミナルの構成、QoS の項目、4つの通信のまとめ、つまずきやすい点、turtlesim のソースの対応）は言葉で説明する。文字数の上限は設けない
 省いたもの: URL、日本語の記事の題名（記事が2本あることだけ触れた）、ソースのファイルへのリンク
 -->

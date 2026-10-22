@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase5_4_gazebo_plant.md（図は docs/img/phase5_4_gazebo_plant.svg）
 原文のコミット: cebd312e12d697738713bd66128aee5cca470590（2026-10-16）
 作成: 2026-10-22、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（LICENSE の1と2）。改造の元にする diff_drive.sdf（Gazebo Sim に付属。Open Source Robotics Foundation、Apache License 2.0）は、LICENSE の「第三者の著作物」にあり、原文にはファイルそのものは載っておらず、自分で書いた部分（出典のコメントとプラグインの記述）だけが載っている。有効質量の計算に使った質量・慣性モーメント・半径は同じファイルの値。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。改造の元にする diff_drive.sdf（Gazebo Sim に付属。Open Source Robotics Foundation、Apache License 2.0）は、LICENSE の「第三者の著作物」にあり、原文にはファイルそのものは載っておらず、自分で書いた部分（出典のコメントとプラグインの記述）だけが載っている。有効質量の計算に使った質量・慣性モーメント・半径は同じファイルの値。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、関数やクラスの名前、短いコマンドは原文の表記のまま書く。数式は、記号の名前と意味を添えて言葉で読む。サンプルコード（actuator_model.py・gz_plant_node.py・gazebo_plant.launch.py）と、ワールドファイルに書く部分、YAML・CMakeLists.txt・package.xml・setup.py に足す行は、写さずに、ブロックの構成と要の行を言葉で説明し、処理の流れは原文の解説の要点に任せた。期待する結果（gz sdf -k、--show-args と --print、launch のログ、Ctrl+C の後の表示）も、原文の解説が使う値を拾って言葉で説明した。図と表（プラグイン、有効質量、仕様、launch の各部分、比較、フェーズ5 のまとめ、つまずきやすい点）は言葉で説明する。文字数の上限は設けない
 省いたもの: URL、型の定義へのリンク、ログの時刻とプロセス番号とアドレスの数字、ワールドファイルのフルパス、ログの行のうち原文の解説が使わない行の数値
 -->

@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase3_4_services.md（図は docs/img/phase3_4_add_seq.svg と docs/img/phase3_4_reset_flow.svg）
 原文のコミット: 132df7b64d48d560def7ec7149f7003938d3d8e5（2026-10-14）
 作成: 2026-10-20、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（LICENSE の1と2）。ros2 interface show で表示する型の定義（example_interfaces と common_interfaces の std_srvs、Apache License 2.0）は、LICENSE の「第三者の著作物」にある。原文の末尾に、API の使い方は公式チュートリアル（ROS 2 Documentation、CC BY 4.0）を参考にした、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。ros2 interface show で表示する型の定義（example_interfaces と common_interfaces の std_srvs、Apache License 2.0）は、LICENSE の「第三者の著作物」にある。原文の末尾に、API の使い方は公式チュートリアル（ROS 2 Documentation、CC BY 4.0）を参考にした、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、関数やクラスの名前、短いコマンドは原文の表記のまま書く。サンプルコード6本と、package.xml・CMakeLists.txt・setup.py に足す行は、写さずに、ブロックの役割と要の行を言葉で説明した。型の定義は写さず、項目の名前と型だけを言葉で書き、コメントは「ある」とだけ伝えた。期待する結果（ログ、ros2 service call の表示）も、何が表示されるかを言葉で説明した。図と表（2組のサンプル、仕様、主な API、各コードの部分の説明、言語の組み合わせ、トピックとサービスの使い分け、Python版と C++版の違い、つまずきやすい点）は言葉で説明する。文字数の上限は設けない
 省いたもの: URL、型の定義へのリンク、ログの時刻の数字
 -->

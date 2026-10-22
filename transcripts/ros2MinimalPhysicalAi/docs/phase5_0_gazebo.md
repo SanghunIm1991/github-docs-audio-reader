@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase5_0_gazebo.md（図は docs/img/phase5_0_bridge.svg、画面は docs/img/phase5_0_gazebo.png）
 原文のコミット: 132df7b64d48d560def7ec7149f7003938d3d8e5（2026-10-14）
 作成: 2026-10-21、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（LICENSE の1と2）。冒頭の画面に写る Gazebo Sim の画面と、付属のワールド diff_drive.sdf の中身は、LICENSE の「第三者の著作物」にある（Open Source Robotics Foundation、Apache License 2.0）。原文の末尾に、導入のコマンドは Gazebo の公式ドキュメントの手順と同等のもの、デモの構成と設定値は導入したパッケージのファイルを読んで自分の言葉でまとめたもの、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。冒頭の画面に写る Gazebo Sim の画面と、付属のワールド diff_drive.sdf の中身は、LICENSE の「第三者の著作物」にある（Open Source Robotics Foundation、Apache License 2.0）。原文の末尾に、導入のコマンドは Gazebo の公式ドキュメントの手順と同等のもの、デモの構成と設定値は導入したパッケージのファイルを読んで自分の言葉でまとめたもの、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、関数やクラスの名前、短いコマンドは原文の表記のまま書く。サンプルコード gz_drive.py と、package.xml・setup.py に足す行は、写さずに、ブロックの役割と要の行を言葉で説明した。期待する結果（apt、ros2 pkg list、gz sim --version、gz topic -l、ros2 launch の --show-args と --print、ブリッジのログ、ros2 topic の各表示、gz service の表示）も、何が表示されるかを言葉で説明した。画面のスクリーンショットと図と表（入れるパッケージ、2台の車両、Odometry の読み方、主な API、疑似プラントとの比較、つまずきやすい点）は言葉で説明する。文字数の上限は設けない
 省いたもの: URL、型の定義へのリンク、ログの時刻とアドレスの数字、Gazebo の版の細かな数字、ワールドファイルのフルパス、ビルドにかかった秒数、作成に使った PC での RTF の値（作業環境の記述のため）、日本語の記事の名前
 -->

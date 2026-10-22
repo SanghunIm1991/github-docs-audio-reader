@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase2_packages.md（図は docs/img/phase2_ws_tree.svg と docs/img/phase2_build_flow.svg）
 原文のコミット: 2e2dca072c0c13b2c8a0f27c0190cc18b837d462（2026-10-15）
 作成: 2026-10-20、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（LICENSE の1と2）。ros2 pkg create が作る雛形の中身（hello.py・hello.cpp・package.xml・CMakeLists.txt の行）は ros2pkg のもので Apache License 2.0（LICENSE の「第三者の著作物」に、tips.md の引用として載っている）。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（それぞれ LICENSE の2と1）。ros2 pkg create が作る雛形の中身（hello.py・hello.cpp・package.xml・CMakeLists.txt の行）は ros2pkg のもので Apache License 2.0（LICENSE の「第三者の著作物」に、tips.md の引用として載っている）。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、短いコマンドとファイル名は原文の表記のまま書く。原文の手順のコマンドは、何をするかと要の部分を言葉にした。雛形の中身と、期待する結果（各ツールの表示）は写さず、何が作られ、何が表示されるかを言葉で説明した。図と表（2種類のパッケージの違い、用語の整理、ros2 pkg のサブコマンド、Python版と C++版のまとめ、つまずきやすい点）と、コンパイラの依存の木は、言葉で説明する。文字数の上限は設けない
 省いたもの: URL、日本語の記事の題名（記事が1本あることだけ触れた）、ls -l の表示の日時やサイズ、ビルドの秒数の細かな値
 -->

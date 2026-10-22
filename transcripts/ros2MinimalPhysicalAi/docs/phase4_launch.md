@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/phase4_launch.md（図は docs/img/phase4_overview.svg と docs/img/phase4_bringup_role.svg と docs/img/phase4_compose.svg）
 原文のコミット: 6d6f7ab7206ed5a18d6de96d4ff31d8d53a510e7（2026-10-17）
 作成: 2026-10-21、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（LICENSE の1と2）。原文の末尾に、API の使い方は公式チュートリアル（ROS 2 Documentation、CC BY 4.0）を参考にした、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。原文の末尾に、API の使い方は公式チュートリアル（ROS 2 Documentation、CC BY 4.0）を参考にした、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、関数やクラスの名前、短いコマンドは原文の表記のまま書く。launch ファイル6本と、package.xml・CMakeLists.txt に足す行は、写さずに、ブロックの役割と要の行を言葉で説明した。期待する結果（ros2 pkg create、--show-args、--print、launch のログ、ros2 param get、ros2 node list、ros2 topic list、ros2 topic info の表示）も、何が表示されるかを言葉で説明した。図と表（パッケージとlaunchファイルの仕様、主な API、各部分の役割、Python と XML の対応、3形式の比較、まとめ、つまずきやすい点）は言葉で説明する。文字数の上限は設けない
 省いたもの: URL、ログの時刻とプロセス番号とアドレスの数字、ログの置き場所のパス、ros2 pkg create のメンテナの名前とメールアドレス
 -->
