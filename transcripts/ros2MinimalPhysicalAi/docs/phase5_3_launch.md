@@ -70,7 +70,7 @@
 
 主な API、つまりこれまでの手順書で使ったもの以外の表は、2列で、2行あります。
 
-declare_parameter に、名前と、10.0、50.0、80.0 のようなリストを渡すと、既定値にリストを渡して、配列のパラメータを宣言できます。2-2節の解説で扱います。
+declare_parameter の既定値に、10.0、50.0、80.0 のようなリストを渡すと、配列のパラメータを宣言できます。2-2節の解説で扱います。
 
 launch の conditions の IfCondition に LaunchConfiguration を渡すと、launch の引数の値、true か false で、Node や IncludeLaunchDescription を起動するかどうかを切り替えられます。3-3節で扱います。
 
@@ -82,9 +82,9 @@ launch の conditions の IfCondition に LaunchConfiguration を渡すと、lau
 
 target_node.py は、80行ほどのコードで、ブロックは4つです。1つ目は import で、rclpy、SetParametersResult、Clock と ClockType、ExternalShutdownException、Node、Float64 を読み込みます。
 
-2つ目は、クラスの外に置いた check_steps の関数です。要の行は2つの検査で、時刻の配列が空か、2つの配列の長さが違えば、同じ長さで空でないこと、という理由を返し、最初の時刻が負か、隣り合う時刻が増えていなければ、0 以上で厳しく増えること、という理由を返します。問題が無ければ None を返します。
+2つ目は、クラスの外に置いた check_steps の関数で、要の行は2つの検査です。2つの配列の長さが違うか空なら、同じ長さで空でないこと、という理由を返し、最初の時刻が負か、後の時刻が前の時刻より大きくなっていなければ、0 以上で、前の時刻より必ず大きくなること、という理由を返します。
 
-3つ目は、Node を継承した TargetGenerator のクラスです。__init__ では、ノード名を target_generator にし、要の行として、step_times を、10.0、50.0、80.0 のリストで、step_values を、10.0、5.0、0.0 のリストで宣言し、period を0.1 で宣言します。2つの配列を読んで check_steps に渡し、理由が返ってきたら ValueError を投げて起動を止めます。そのあと、単調に増える時計を作って起動の時刻を覚え、今の目標を None にし、Publisher とタイマーを作り、on_params を登録します。target_at のメソッドは、経過時間までに過ぎた切り替えのうち、最後の値を返し、どれも過ぎていなければ0 を返します。on_timer は、経過時間を秒に直して target_at で目標を求め、publish し、前回と違うときだけ、経過時間と新しい目標をログに出します。on_params は、step_times、step_values、period の変更を、起動のときにしか設定できない、という理由で拒否します。
+3つ目は、Node を継承した TargetGenerator のクラスで、__init__、target_at、on_timer、on_params の4つのメソッドを持ちます。要の行は、__init__ の中の3つです。step_times を、10.0、50.0、80.0 のリストで、step_values を、10.0、5.0、0.0 のリストで宣言する2行と、check_steps が理由を返したら ValueError を投げる行です。
 
 4つ目は main で、これまでと同じです。
 
@@ -134,9 +134,7 @@ CMakeLists.txt は変えなくてかまいません。フェーズ4 の3-3節の
 
 vehicle_sim.launch.py は、50行ほどのコードで、ブロックは、import と、generate_launch_description の関数の2つです。import では、LaunchDescription、DeclareLaunchArgument、IncludeLaunchDescription、IfCondition、PythonLaunchDescriptionSource、LaunchConfiguration、PathJoinSubstitution、Node、FindPackageShare を読み込みます。
 
-関数の先頭では、4つの変数を作ります。params_file と gazebo は、同じ名前の LaunchConfiguration です。default_params は、FindPackageShare の learn_bringup と、config と、vehicle_sim.yaml をつないだパスです。gazebo_demo は、FindPackageShare の ros_gz_sim_demos と、launch と、diff_drive.launch.py をつないだパスです。
-
-そのあと、LaunchDescription のリストに、7つの要素を並べて返します。1つ目と2つ目は DeclareLaunchArgument で、gazebo を既定値 true で、params_file を既定値 default_params で、それぞれ説明付きで宣言します。3つ目が要の行の1つで、IncludeLaunchDescription で gazebo_demo を取り込み、launch_arguments に rviz を false とする辞書の items を渡し、condition に IfCondition の gazebo を付けます。4つ目から7つ目は Node で、learn_py の vehicle_plant、pi_controller、target_generator、gz_display を、それぞれ同じ名前で、output を screen、parameters に params_file のリストを渡して起動します。最後の gz_display の Node にだけ、condition に IfCondition の gazebo を付けます。これも要の行です。
+関数は、パスなどを変数に用意してから、LaunchDescription に、引数の宣言2つ、デモの取り込み1つ、Node 4つの、7つの要素を並べて返します。要の行は、condition に IfCondition の gazebo を付けた2か所、つまりデモの IncludeLaunchDescription と、gz_display の Node です。
 
 原文の解説の要点です。役割は、目標、PI 制御、プラントの3つのノードを必ず起動し、引数 gazebo が true なら、Gazebo のデモと表示用のノードも起動することです。
 
@@ -182,11 +180,9 @@ step_times を整数で書いたときと、2つの配列の長さがそろっ�
 
 最初に、vehicle_plant-1、pi_controller-2、target_generator-3 の3つのプロセスが起動した、と出ます。target_generator が、0.1秒の時点で、目標を0.00 にした、と出します。
 
-10.0秒の時点で、target_generator が、目標を10.00 にした、と出します。直後の vehicle_plant のログは、ペダルがプラス1.00、速度が0.00、駆動力が499 です。pi_controller のログも、目標10.00、速度0.02、ペダルプラス1.00、積分の項0.000 です。1秒後には、速度が1.1 あたり、駆動力が2675 になります。
+10.0秒の時点で、目標が10.00 に変わり、ペダルがプラス1.00 になって加速が始まります。しばらくして、速度が10.00、ペダルが0.54、積分の項が0.540 に落ち着きます。
 
-しばらくして、速度が10.00 になり、ペダルが0.54、積分の項が0.540 に落ち着きます。
-
-50.0秒の時点で、目標が5.00 に変わります。直後は、ペダルがマイナス1.00、速度が9.41、制動力が6234 です。1秒後には、ペダルがプラス0.22、速度が5.42 になります。その後、速度が5.00、ペダルが0.31、積分の項が0.307 に落ち着きます。
+50.0秒の時点で、目標が5.00 に変わり、ペダルがマイナス1.00 になって減速し、速度が5.00、ペダルが0.31、積分の項が0.307 に落ち着きます。
 
 80.0秒の時点で、目標が0.00 に変わります。そのあとのログでは、ペダルがマイナス1.00、速度が3.20、制動力が8192 の行のあと、ペダルがプラス0.17、速度が0.12、積分の項が0.230 になり、さらに、ペダルがプラス0.13、速度が0.18、積分の項が0.217 になります。
 
@@ -226,7 +222,7 @@ launch を起動し、ターミナル1 のログに target_generator の最初�
 
 一方、開くのが遅いと線が出ない、という仕組みは、rqt_plot のソースには見当たらず、送り手を起動して30秒後に開いたときも、線が出ました。ただ、遅く開いたときに線が出なかった、という報告もあり、どういう条件で起きるかは、手順書を作るときには確かめられていない、とあります。
 
-どちらの場合も、線が出ないトピックは、開いた rqt_plot のウィンドウの上の段で、後から足せます。Topic の欄に /plant/velocity/data のように入れ、Enter キーを押すか、右のボタンを押します。このボタンは、マウスを重ねると、トピックをグラフに足す、という意味の英語が出て、多くの環境ではプラスの形のアイコンです。Enter キーとこのボタンは、入れたトピックがネットワークに見つかったときだけ効くので、効かないときは、launch が動いているかと、トピックの名前を確かめます。rqt_plot を閉じて、開き直してもかまいません。
+どちらの場合も、線が出ないトピックは、開いた rqt_plot のウィンドウの上の段で、後から足せます。Topic の欄に /plant/velocity/data のように入れ、Enter キーを押すか、右のボタンを押します。このボタンは、マウスを重ねると add topic to plot と出て、多くの環境ではプラスの形のアイコンです。Enter キーとこのボタンは、入れたトピックがネットワークに見つかったときだけ効くので、効かないときは、launch が動いているかと、トピックの名前を確かめます。rqt_plot を閉じて、開き直してもかまいません。
 
 グラフの読み方の表があります。4-1節のログの数値から想定した形で、時刻は launch を起動してからの秒数です。4列で、4行あります。列は、区間、目標、速度の線、ペダルの線です。
 
@@ -250,7 +246,7 @@ launch を起動し、ターミナル1 のログに target_generator の最初�
 
 ### 4-4. 止める、Ctrl+C
 
-launch を起動したターミナルで Ctrl+C を押すと、起動したノードがまとめて止まります。フェーズ4 の4-5節の観察のポイントと、4-1節の Ctrl+C の期待する結果のとおりです。
+launch を起動したターミナルで Ctrl+C を押すと、起動したノードがまとめて止まります。フェーズ4 の4-5節の観察のポイントと、フェーズ4 の4-1節の Ctrl+C の期待する結果のとおりです。
 
 期待する結果、Gazebo なしで起動した場合の抜粋です。まず launch が、ユーザーが ctrl-c、SIGINT で中断した、という警告を出し、target_generator、pi_controller、vehicle_plant に、それぞれ SIGINT を送っている、という行が出ます。そのあと、vehicle_plant-1 から Traceback が出て、途中に node.destroy_node の行があり、KeyboardInterrupt で終わります。最後に、vehicle_plant-1 のプロセスが終了コード マイナス2 で死んだ、という ERROR の行が、起動したコマンドの行付きで出ます。pid とパスは実行ごとに変わります。
 
@@ -268,7 +264,7 @@ launch を起動したターミナルで Ctrl+C を押すと、起動したノ�
 
 パラメータを変えて試すときは、インストールされた YAML を直接書き換えるのではなく、コピーを作って、params_file で渡します。元のファイルは、既定の条件として残しておけます。
 
-cp で、learn_bringup の config の vehicle_sim.yaml を、ros2_ws の config に、slow_brake.yaml という名前でコピーします。コピーした slow_brake.yaml の、vehicle_plant の tau_brake を0.2 から1.0 に書き換えて、渡します。ros2_ws の config は、フェーズ3-3 で作ったフォルダです。フェーズ4 の3-1節で空になって消した場合は、mkdir -p で作り直します。
+cp で、ソースの側の、ros2_ws の src の learn_bringup の config の vehicle_sim.yaml を、ros2_ws の config に、slow_brake.yaml という名前でコピーします。コピーした slow_brake.yaml の、vehicle_plant の tau_brake を0.2 から1.0 に書き換えて、渡します。ros2_ws の config は、フェーズ3-3 で作ったフォルダです。フェーズ4 の3-1節で空になって消した場合は、mkdir -p で作り直します。
 
 コマンドは、ros2 launch learn_bringup vehicle_sim.launch.py に、params_file:= のあとに、ドル記号の HOME から始まる、slow_brake.yaml のパスを付けたものです。
 
