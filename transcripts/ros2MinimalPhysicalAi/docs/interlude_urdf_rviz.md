@@ -3,9 +3,9 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/interlude_urdf_rviz.md（図は docs/img/interlude_urdf_rviz_overview.svg）
 原文のコミット: 331724d61c947ff6ef4324772abf207e102f3913（2026-10-17）
 作成: 2026-10-23、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（それぞれ LICENSE の2と1）。cat・diff・grep・sed・xacro の表示として抜粋した URDF と xacro のファイルの中身（urdf_tutorial、David V. Lu!! ほか、BSD 3-Clause License）は、LICENSE の「第三者の著作物」にある。原文の末尾に、説明と表は公式チュートリアル（CC BY 4.0）の流れに沿って要点を独自にまとめ直したもの、10節は RobotCAD（LGPL-2.1-or-later）と FreeCAD の公開の情報から事実を自分の言葉でまとめたもの、ツールの表示は urdf_tutorial・urdf_launch・robot_state_publisher・joint_state_publisher・RViz2・tf2_ros・ros2cli・urdfdom（BSD License・Apache License 2.0）の出力、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（それぞれ LICENSE の2と1）。cat・diff・grep・sed・xacro の表示として抜粋した URDF と xacro のファイルの中身（urdf_tutorial、David V. Lu!! ほか、BSD 3-Clause License）は、LICENSE の「第三者の著作物」にある。原文の末尾に、説明と表は公式チュートリアル（CC BY 4.0）の流れに沿って要点を独自にまとめ直したもの、10節は RobotCAD（LGPL-2.1-or-later）と FreeCAD の公開の情報から事実を自分の言葉でまとめたもの、ツールの表示は urdf_tutorial・urdf_launch・robot_state_publisher・joint_state_publisher・RViz2・tf2_ros・ros2cli・urdfdom（BSD License・Apache License 2.0）の出力、コマンドは公式チュートリアルの例と同等、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、要素やノードの名前、短いコマンドは原文の表記のまま書く。urdf_tutorial のファイルの中身（cat・diff・grep・sed・xacro の表示）は写さず、どの要素がどの値で、前のファイルから何が変わったかを、原文の解説に沿って言葉で説明した。ほかのツールの表示（apt・ls・check_urdf・--show-args・ログ・ros2 topic・tf2_echo・sha256sum）も写さず、何が表示されるかと原文の解説が使う値を言葉で説明した。この章には原文のリポジトリ自身のコードは無い。図と表（ファイルと公式チュートリアルの対応、関節の種類、つまずきやすい点）は言葉で説明する。文字数の上限は設けない
-省いたもの: URL（FreeCAD のダウンロードの URL を含む）、型の定義へのリンク、apt list の版と日付、ログの時刻・プロセス番号・ログの置き場所のパス、stamp と At time の時刻、12節の確認状況に書かれた版の番号、ドキュメントのリポジトリのブランチ名
+省いたもの: URL（FreeCAD のダウンロードの URL を含む）、型の定義へのリンク、apt list の版と日付、ログの時刻・プロセス番号・ログの置き場所のパス、stamp と At time の時刻、10節と12節に書かれた版の番号（RobotCAD・urdf_tutorial・urdf_launch・joint_state_publisher）、AppImage の大きさの MiB の値、RobotCAD が依存を入れる先のフォルダのパス、ドキュメントのリポジトリのブランチ名
 -->
 
 # 間章: URDF でロボットを記述し、RViz2 で見る（聞くための原稿）
@@ -38,7 +38,7 @@
 
 ## 1. 全体像
 
-ここに図が1枚あります。左端に、薄い灰色の箱が1つあり、URDF のファイル、01 から07 は拡張子が urdf、08 は urdf.xacro、と書いてあります。その右を、灰色の破線の大きな枠が囲み、見出しは、display.launch.py が起動する範囲、です。
+ここに図が1枚あります。左端に、薄い灰色の箱が1つあり、URDF のファイル、01 から07 は拡張子が urdf、08 は urdf.xacro、と書いてあります。その右に、灰色の破線の大きな枠があり、見出しは、display.launch.py が起動する範囲、です。URDF のファイルの箱は、この枠の外にあります。
 
 枠の中の上の段には、左から3つの箱が並びます。左は薄い青の箱で、xacro、展開して URDF の文字列にする。真ん中は薄い青の箱で、robot_state_publisher、関節の角度から TF を計算して配る。右は薄いオレンジ色の箱で、RViz2、RobotModel と TF で3D に表示する、と書いてあります。枠の中の下の段、robot_state_publisher の真下には、薄いオレンジ色の箱が1つあり、joint_state_publisher_gui、スライダーで角度、と書いてあります。
 
@@ -48,7 +48,7 @@
 
 2本目は、xacro から robot_state_publisher へ、URDF の文字列、のラベルで向かいます。
 
-3本目は、robot_state_publisher から RViz2 へ向かい、ラベルは、/robot_description と、/tf と /tf_static の2つです。
+3本目は、robot_state_publisher から RViz2 へ向かいます。ラベルは2行で、上が /robot_description、下が /tf と /tf_static です。
 
 4本目は、robot_state_publisher から、下の joint_state_publisher_gui へ、/robot_description のラベルで下りる矢印です。
 
@@ -126,7 +126,7 @@ ros-jazzy-urdf-tutorial と、依存として自動で入ったことを示す�
 
 model は、表示するファイルの、urdf_tutorial のパッケージのフォルダからの相対パスで、たとえば urdf の01-myfirst.urdf です。gui は、true、つまり既定ならスライダーのウィンドウを出す joint_state_publisher_gui を、false ならウィンドウを出さない joint_state_publisher を起動します。rvizconfig は、RViz2 の設定のファイルで、既定は urdf_tutorial の rviz の urdf.rviz です。
 
-model の既定値の表示は、urdf の01-myfirst.urdf ではなく、置換の式を書いた文字列になっています。これは、この launch の既定値の書き方の不具合で、model:= を省いて起動すると、この文字列がそのままファイルの名前として使われ、xacro が、そのファイルやフォルダは無い、というエラーで失敗します。作るときに、同じ文字列を渡して確かめた、とあります。そのため、この章では、毎回 model:= を付けて起動します。
+model の既定値の表示は、urdf の01-myfirst.urdf ではなく、置換の式を書いた文字列になっています。これは、この launch の既定値の書き方の不具合で、model:= を省いて起動すると、この文字列がそのままファイルの名前として使われ、xacro が、No such file or directory、つまり、そのファイルやフォルダは無い、というエラーで失敗します。作るときに、同じ文字列を渡して確かめた、とあります。そのため、この章では、毎回 model:= を付けて起動します。
 
 ## 3. 見た目を作る、チュートリアル1
 
@@ -134,13 +134,13 @@ model の既定値の表示は、urdf の01-myfirst.urdf ではなく、置換�
 
 まず、ターミナル2 で、cat で01-myfirst.urdf の中身を見ます。
 
-期待する結果は、10行ほどの短い XML です。XML の宣言のあと、myfirst という名前の robot があり、その中に base_link という名前の link が1つだけあります。link の中の visual の geometry に、長さ0.6、半径0.2 の cylinder が書かれています。
+期待する結果は、10行ほどの短い XML です。
 
-つまり、myfirst という名前のロボットに、base_link という名前のリンクが1つだけあり、リンクの見た目、visual の形、geometry は、長さ0.6メートル、半径0.2メートルの円柱、cylinder です。URDF の長さの単位はメートル、角度の単位はラジアンで、形には、円柱のほかに、箱の box、球の sphere、形のファイルの mesh があります。
+その中身は、myfirst という名前のロボットに、base_link という名前のリンクが1つだけあり、リンクの見た目、visual の形、geometry は、長さ0.6メートル、半径0.2メートルの円柱、cylinder です。URDF の長さの単位はメートル、角度の単位はラジアンで、形には、円柱のほかに、箱の box、球の sphere、形のファイルの mesh があります。
 
 URDF として正しく読めるかは、check_urdf で確かめられます。ターミナル2 で、check_urdf に01-myfirst.urdf を渡します。
 
-期待する結果です。ロボットの名前が myfirst であることと、XML の読み込みに成功したことが表示され、最後に、根のリンクは base_link で、子のリンクは0個、と表示されます。読み込みに成功した、と出れば、読めています。最後の行は、木の根のリンク、root Link が base_link で、子のリンクが0個であることを示します。
+期待する結果は3行です。ロボットの名前の行、Successfully Parsed XML の行、そして根のリンクの行です。Successfully Parsed XML、つまり XML の読み込みに成功した、が出れば、読めています。最後の行は、木の根のリンク、root Link が base_link で、子のリンクが0個であることを示します。
 
 表示します。ターミナル1 で、ros2 launch urdf_tutorial display.launch.py に、model:= で urdf の01-myfirst.urdf を渡します。WSLg のウィンドウが2つ開きます。
 
@@ -172,9 +172,9 @@ RViz2 の画面の読み方の要点は、次の5つです。画面の例は、�
 
 1つ前のファイルとの違いを、diff で見ます。小なりの記号の行が前のファイル、大なりの記号の行が後のファイルの中身です。ターミナル2 で、diff に01-myfirst.urdf と02-multipleshapes.urdf を渡します。
 
-期待する結果です。2行目の robot の名前が、myfirst から multipleshapes に変わったことと、9行目の後ろに、14行ほどが足されたことが表示されます。足されたのは、right_leg という link と、base_to_right_leg という joint です。
+期待する結果は、2行目の robot の名前が変わったことと、9行目の後ろに14行ほどが足されたことの表示です。
 
-ロボットの名前のほかに、2つの要素が足されています。
+ロボットの名前、つまり multipleshapes のほかに、2つの要素が足されています。
 
 1つ目は、リンクの right_leg、つまり右脚です。形は、0.6メートル、0.1メートル、0.2メートルの箱で、box の size の属性に、x、y、z の順に書きます。
 
@@ -190,7 +190,7 @@ URDF では、リンクを並べただけでは、どこに置くかが決まり
 
 ターミナル2 で、diff に02-multipleshapes.urdf と03-origins.urdf を渡します。
 
-期待する結果です。robot の名前が origins に変わったことと、origin の行が2か所に足されたことが表示されます。1か所目は16行目で、rpy が0、1.57075、0、xyz が0、0、マイナス0.3 の origin、2か所目は23行目で、xyz が0、マイナス0.22、0.25 の origin です。
+期待する結果は、robot の名前が origins に変わったことと、origin の行が2か所に足されたことの表示です。
 
 origin、つまり原点が2か所に足されています。1つ目、16行目は right_leg の visual の中、2つ目、23行目は関節 base_to_right_leg の中です。xyz は位置、メートルで、rpy は向き、つまり x 軸、y 軸、z 軸のまわりの回転、ロール、ピッチ、ヨーのラジアンです。この2つは、意味が違います。
 
@@ -208,7 +208,7 @@ origin、つまり原点が2か所に足されています。1つ目、16行目�
 
 ターミナル2 で、diff に03-origins.urdf と04-materials.urdf を渡します。
 
-期待する結果です。robot の名前が materials に変わり、その直後に、blue と white という2つの material の定義が足されています。続いて、円柱の visual に blue の material を使う行が、脚の visual に white の material を使う行が足され、さらに、left_leg という link と、base_to_left_leg という joint が足されたことが表示されます。
+期待する結果は、robot の名前が materials に変わったことと、いくつかの行のまとまりが足されたことの表示です。
 
 足されたものは3つです。
 
@@ -226,15 +226,15 @@ origin、つまり原点が2か所に足されています。1つ目、16行目�
 
 05 では、足先の台、車輪、つかむ手、頭を足して、ロボットを仕上げています。ファイルは245行あり、diff の表示も長いので、新しく出てくる形だけを探します。ターミナル2 で、grep に -n と -E を付けて、05-visual.urdf から sphere か mesh を含む行を探します。
 
-期待する結果は5行です。170行目、184行目、198行目、212行目には、urdf_tutorial の meshes の、l_finger.dae か l_finger_tip.dae を指す mesh の行が、220行目には、半径0.2 の sphere の行があります。
+期待する結果は、行番号付きの5行です。
 
 頭、つまり220行目は、半径0.2メートルの球、sphere です。
 
-つかむ手の指、つまり170行目から212行目は、形のファイル、mesh で描きます。package のあとにコロンとスラッシュ2つを付けて、urdf_tutorial の meshes の下のファイルを指す書き方は、パッケージ urdf_tutorial のフォルダの下の meshes、という意味で、PC ごとにインストール先が違っても、同じ URDF で読めます。左右の指は同じファイルを使い、右の指、つまり right_gripper と right_tip は、visual の形の原点の rpy を、マイナス3.1415、0、0 にして、x 軸のまわりに半回転させ、左右対称に置いています。grep に -n と、手前の4行も出す -B4 を付けて、l_finger を探すと、各指の origin を見られます。
+つかむ手の指、つまり170行目、184行目、198行目、212行目は、形のファイル、mesh で描き、l_finger.dae と l_finger_tip.dae を使います。package のあとにコロンとスラッシュ2つを付けて、urdf_tutorial の meshes の下のファイルを指す書き方は、パッケージ urdf_tutorial のフォルダの下の meshes、という意味で、PC ごとにインストール先が違っても、同じ URDF で読めます。左右の指は同じファイルを使い、右の指、つまり right_gripper と right_tip は、visual の形の原点の rpy を、マイナス3.1415、0、0 にして、x 軸のまわりに半回転させ、左右対称に置いています。grep に -n と、手前の4行も出す -B4 を付けて、l_finger を探すと、各指の origin を見られます。
 
 木の形は、check_urdf で見られます。ターミナル2 で、check_urdf に05-visual.urdf を渡します。
 
-期待する結果です。ロボットの名前が visual で、読み込みに成功したことが表示され、根のリンクの base_link が4つの子を持つ、と出て、木の形が字下げで並びます。1つ目の子は left_leg で、その子が left_base、その子が left_back_wheel と left_front_wheel です。2つ目の子は right_leg で、右側も同じ形です。3つ目の子は gripper_pole で、その子が left_gripper と right_gripper、それぞれの子が left_tip と right_tip です。4つ目の子は head で、その子が box です。
+期待する結果は、ロボットの名前の行と Successfully Parsed XML の行のあと、根のリンクから始まる木の形が、字下げで並ぶ表示です。
 
 根の base_link、つまり胴体に、4つの枝、つまり左脚、右脚、つかむ手の棒の gripper_pole、頭の head がつながり、脚の先には、足先の台、つまり名前が base で終わるリンクと、前後の車輪、棒の先には、左右の指と指先、つまり名前が tip で終わるリンク、頭には目の箱、box がつながっています。リンクは全部で16個あります。
 
@@ -312,9 +312,9 @@ name に、固定でない8つの関節の名前が、position に、同じ順�
 
 robot_state_publisher は、この角度と、URDF の関節の原点と軸から、各リンクのフレームの位置と向きを計算して、TF として送ります。2つのフレームの間の関係は、tf2_echo で読めます。ここでは、胴体、つまり base_link から見た、左の指、つまり left_gripper のフレームを読みます。ターミナル2 で、ros2 run tf2_ros tf2_echo に、base_link と left_gripper を渡します。
 
-期待する結果、スライダーをすべて0 にしたときの表示です。最初の2行ほどは、base_link から left_gripper への変換を待っている、base_link というフレームは存在しない、という表示です。そのあと、時刻の行に続いて、Translation、つまり位置が、0.390、0.010、0.200 と表示され、Rotation、つまり向きは、クォータニオンで0、0、0、1、ロール、ピッチ、ヨーで、ラジアンでも度でもすべて0 と表示されます。最後に、4行4列の変換の行列が表示されます。止めるまで、1秒ごとに同じ形の表示が続きます。
+期待する結果、スライダーをすべて0 にしたときの表示です。最初の数行は、Waiting for transform、つまり base_link から left_gripper への変換を待っている、と、frame does not exist、つまり base_link というフレームは存在しない、という表示です。そのあと、時刻の行に続いて、Translation、つまり位置が、0.390、0.010、0.200 と表示され、Rotation、つまり向きは、クォータニオンで0、0、0、1、ロール、ピッチ、ヨーで、ラジアンでも度でもすべて0 と表示されます。最後に、4行4列の変換の行列が表示されます。止めるまで、1秒ごとに同じ形の表示が続きます。
 
-最初の数行の、変換を待っている、フレームが存在しない、という表示は、tf2_echo が起動した直後で、まだ TF を1つも受け取っていない、という意味で、すぐに消えます。その後の Translation が位置、メートルで、Rotation が向きです。左の指のフレームは、胴体から見て、前に0.39メートル、左に0.01メートル、上に0.2メートルにあります。これは、URDF の2つの関節の原点の足し算、つまり gripper_extension の、0.19、0、0.2 と、left_gripper_joint の、0.2、0.01、0 の足し算になっています。これは、4-2節の diff の表示の外の行です。
+最初の数行の、Waiting for transform と frame does not exist の表示は、tf2_echo が起動した直後で、まだ TF を1つも受け取っていない、という意味で、すぐに消えます。その後の Translation が位置、メートルで、Rotation が向きです。左の指のフレームは、胴体から見て、前に0.39メートル、左に0.01メートル、上に0.2メートルにあります。これは、URDF の2つの関節の原点の足し算、つまり gripper_extension の、0.19、0、0.2 と、left_gripper_joint の、0.2、0.01、0 の足し算になっています。これは、4-2節の diff の表示の外の行です。
 
 スライダーで gripper_extension をマイナス0.38 にすると、Translation の x が0.39 から0.01 に減り、left_gripper_joint を開くと、Rotation のロール、ピッチ、ヨーのうち、ヨー、つまり3つ目が増えるはずです。これは URDF の関節の軸と範囲から考えた値で、作るときには、スライダーを動かして確かめていない、とあります。止めるときは、ターミナル2 で Ctrl+C を押します。
 
@@ -328,7 +328,7 @@ TF が2つのトピックに分かれているのは、送る回数を減らす�
 
 胴体、つまり base_link の部分を、sed の -n で、07-physics.urdf の14行目から30行目を表示して見ます。
 
-期待する結果です。base_link の link の中に、3つのまとまりがあります。visual には、長さ0.6、半径0.2 の cylinder と、blue の material。collision には、同じ長さ0.6、半径0.2 の cylinder。inertial には、質量10 の mass と、対角の ixx、iyy、izz が1e-3、つまり0.001 で、対角の外の3つが0 の inertia です。
+期待する結果です。base_link の link の中に、visual、collision、inertial の3つのまとまりがあります。visual と collision は、どちらも3-1節と同じ長さ0.6、半径0.2 の円柱で、inertial は、質量10 と、対角の3つが0.001、対角の外の3つが0 の慣性モーメントです。
 
 ### 5-1. 衝突の形
 
@@ -348,11 +348,11 @@ inertial には、リンクの質量、つまり mass、キログラムと、回
 
 1つ目。円柱、箱、球のような単純な形なら、質量が中に均一に散らばっていると考えて、形ごとの式で計算できます。複雑な形なら、形を作ったソフトウェアで計算できることが多いです。
 
-2つ目。分からないときの仮の値として、中くらいのリンクなら、対角の3つを1e-3 以下にするとよい、とあります。これは、1辺0.1メートル、質量0.6キログラムの箱に当たります。対角を1 にする、つまり単位行列は、ずっと大きすぎて、同じ大きさの箱で質量600キログラムに当たるので、よくありません。
+2つ目。分からないときの仮の値として、中くらいのリンクなら、対角の3つを0.001 以下にするとよい、とあります。これは、1辺0.1メートル、質量0.6キログラムの箱に当たります。対角を1 にする、つまり単位行列は、ずっと大きすぎて、同じ大きさの箱で質量600キログラムに当たるので、よくありません。
 
 3つ目。慣性を0 や、0 に近い値にすると、シミュレーションで、ロボットの形が崩れることがあります。
 
-07 の値は、この仮の値、1e-3 を、すべてのリンクに使ったもので、物理として正しい値ではありません。たとえば胴体を、質量10キログラム、半径0.2メートル、長さ0.6メートルの均一な円柱と考えると、横の軸のまわりの慣性モーメントは、10 かける、3 かける0.2 の2乗、プラス0.6 の2乗、を12 で割って、0.4キログラム平方メートルで、1e-3 の400倍になります。これは筆者の計算です。RViz2 での表示には慣性は使われないので、このチュートリアルでは、形をそろえることを優先しています。シミュレーションに使うときは、形と質量から計算した値に直します。
+07 の値は、この仮の値、0.001 を、すべてのリンクに使ったもので、物理として正しい値ではありません。たとえば胴体を、質量10キログラム、半径0.2メートル、長さ0.6メートルの均一な円柱と考えると、横の軸のまわりの慣性モーメントは次のように求まります。3 かける0.2 の2乗に、0.6 の2乗を足すと0.48、それに10 を掛けて12 で割ると0.4キログラム平方メートルで、0.001 の400倍になります。これは筆者の計算です。RViz2 での表示には慣性は使われないので、このチュートリアルでは、形をそろえることを優先しています。シミュレーションに使うときは、形と質量から計算した値に直します。
 
 ### 5-3. 接触と関節の動きの性質
 
@@ -382,13 +382,13 @@ xacro のファイルは、先頭の robot に、xacro の名前空間、つま�
 
 ターミナル2 で、sed の -n で、08-macroed.urdf.xacro の4行目から9行目と、23行目から28行目を表示します。
 
-期待する結果です。前半の6行には、6つの xacro の property が並びます。胴体の半径の width が0.2、脚の長さの leglen が0.6、棒の長さの polelen が0.2、胴体の長さの bodylen が0.6、足先の台の長さの baselen が0.4、車輪の直径の wheeldiam が0.07 です。後半の6行は、default_inertial という名前で、引数が mass の、xacro の macro です。中身は inertial で、mass の値に引数の mass を使い、inertia は、対角が1e-3、ほかが0 です。
+期待する結果は、前半の6行の、xacro の property の並びと、後半の6行の、default_inertial という名前の xacro の macro です。
 
-前半は、胴体の半径、つまり width や、脚の長さ、つまり leglen などの、寸法のプロパティです。後半の default_inertial は、5-2節の仮の慣性を、質量だけを引数にして書くマクロで、各リンクの中で、xacro の default_inertial の要素に、mass を10 のように書いて使います。
+前半は、寸法の6つのプロパティで、胴体の半径の width が0.2、脚の長さの leglen が0.6 などです。後半の default_inertial は、5-2節の仮の慣性を、質量だけを引数にして書くマクロで、各リンクの中で、xacro の default_inertial の要素に、mass を10 のように書いて使います。
 
 脚は、1本分をマクロ leg にまとめ、左右で2回使っています。ターミナル2 で、sed の -n で、08-macroed.urdf.xacro の90行目から94行目と、119行目から120行目を表示します。
 
-期待する結果です。前半は、leg のマクロの中の関節の部分で、名前が、base_to_、引数 prefix、_leg の、type が fixed の joint です。親は base_link、子は、引数 prefix に _leg を付けたリンクで、origin の xyz は、0 と、reflect かける、width プラス0.02、と0.25 です。後半の2行は、マクロを使う行で、xacro の leg の要素に、prefix を right、reflect をマイナス1 と書いた行と、prefix を left、reflect を1 と書いた行です。
+期待する結果は、前半の5行の、leg のマクロの中の関節の部分と、後半の2行の、マクロを使う行です。後半の2行は、xacro の leg の要素に、prefix を right、reflect をマイナス1 と書いた行と、prefix を left、reflect を1 と書いた行です。
 
 ここに、xacro のよく使う工夫が3つあります。
 
@@ -402,13 +402,13 @@ xacro のファイルは、先頭の robot に、xacro の名前空間、つま�
 
 xacro のコマンドで展開すると、ふつうの URDF が表示されます。脚の関節の部分を探します。ターミナル2 で、xacro に08-macroed.urdf.xacro を渡し、その出力から、grep に後ろの4行も出す -A4 を付けて、名前が base_to_ で始まり _leg で終わる joint を探します。
 
-期待する結果です。2つの関節が表示されます。base_to_right_leg は、親が base_link、子が right_leg、origin の xyz が、0、マイナス0.22、0.25 です。base_to_left_leg は、親が base_link、子が left_leg、origin の xyz が、0、0.22、0.25 です。
+期待する結果は、base_to_right_leg と base_to_left_leg の2つの関節の表示です。
 
 reflect かける、width プラス0.02 の式が、右でマイナス0.22、左で0.22 に計算され、3-4節の04、そして07 の脚の関節と同じ値になっています。展開した結果の木の形、つまり check_urdf の表示も、3-5節の05 と同じ16個のリンクになります。
 
 check_urdf は xacro を展開しないので、xacro のファイルを直接渡すと失敗します。ターミナル2 で、check_urdf に08-macroed.urdf.xacro を直接渡してみます。
 
-期待する結果です。Error として、length に入っている、ドル記号と中かっこで bodylen を囲んだ文字列は、正しい小数ではない、という行と、それが urdf_parser のソースの link.cpp の何行目で見つかったかの行が出て、さらに、base_link のリンクの visual の要素を読めなかった、という Error が出ます。
+期待する結果です。Error として、length に入っている、ドル記号と中かっこで bodylen を囲んだ文字列は is not a valid float、つまり正しい小数ではない、という行と、それが urdf_parser のソースの link.cpp の何行目で見つかったかの行が出て、さらに、Could not parse visual element、つまり base_link のリンクの visual の要素を読めなかった、という Error が出ます。
 
 bodylen の式が、数でないまま読まれています。xacro のファイルを点検するときは、xacro で展開した結果をファイルに書き出してから、check_urdf に渡します。たとえば、xacro の出力をホームの macroed.urdf に書き出してから、check_urdf にそのファイルを渡します。
 
@@ -448,7 +448,7 @@ display.launch.py の model は、urdf_tutorial のパッケージのフォル�
 
 ターミナル1 では、ros2 run robot_state_publisher robot_state_publisher に、--ros-args と、-p で robot_description に、自分のファイルを xacro で展開した結果をその場で渡して起動します。ターミナル2 では、ros2 run joint_state_publisher_gui joint_state_publisher_gui を起動します。ターミナル3 では、rviz2 に -d で、urdf_tutorial の share の rviz の urdf.rviz を渡して起動します。
 
-xacro で展開した結果をその場で渡すのは、xacro の展開の結果の文字列を、パラメータに渡すシェルの書き方です。joint_state_publisher_gui は、robot_state_publisher が送る /robot_description を受け取って、スライダーを作ります。4-4節のとおりです。RViz2 の設定は urdf_tutorial のものを借りているので、Fixed Frame は base_link になります。根のリンクの名前が違う場合は、7-1節の方法で Fixed Frame を変えます。
+ドル記号とかっこで xacro のコマンドを囲むのはシェルの書き方で、展開した結果の文字列を、その場でパラメータに渡します。joint_state_publisher_gui は、robot_state_publisher が送る /robot_description を受け取って、スライダーを作ります。4-4節のとおりです。RViz2 の設定は urdf_tutorial のものを借りているので、Fixed Frame は base_link になります。根のリンクの名前が違う場合は、7-1節の方法で Fixed Frame を変えます。
 
 期待する結果です。ターミナル1 に Robot initialized、ターミナル2 に Got description, configuring robot が出て、3-1節と同じ2つのウィンドウが開き、RViz2 に、自分のロボットが描かれます。止めるときは、ターミナル3、2、1 の順に Ctrl+C で止めます。
 
@@ -464,7 +464,7 @@ xacro で展開した結果をその場で渡すのは、xacro の展開の結�
 
 4つ目。robot_state_publisher は、URDF を /robot_description に配り、/joint_states の角度から各リンクのフレームを計算して、固定の関節の先は /tf_static に一度、動く関節の先は /tf に繰り返し送ります。joint_state_publisher_gui は、スライダーの値を /joint_states に送ります。RViz2 は、URDF と TF から、Fixed Frame を基準に、ロボットを描きます。
 
-5つ目。衝突の形、collision と、慣性、inertial は、シミュレーションや動きの計画に使います。衝突の形は単純な形にすることが多く、慣性は、形と質量から計算した値を書きます。チュートリアルの1e-3 は仮の値です。
+5つ目。衝突の形、collision と、慣性、inertial は、シミュレーションや動きの計画に使います。衝突の形は単純な形にすることが多く、慣性は、形と質量から計算した値を書きます。チュートリアルの0.001 は仮の値です。
 
 6つ目。xacro は、プロパティ、式、マクロで、URDF の繰り返しを減らします。xacro のコマンドで、ふつうの URDF に展開してから使い、display.launch.py も、毎回 xacro を通しています。
 
@@ -472,19 +472,19 @@ xacro で展開した結果をその場で渡すのは、xacro の展開の結�
 
 2列の表で、10行あります。列は、症状と、確かめることです。
 
-1行目。display.launch.py が、置換の式を書いた名前のファイルやフォルダは無い、というエラーで失敗する場合。model:= を付け忘れています。2-3節のとおりです。model:= を urdf の01-myfirst.urdf のように、毎回付けます。
+1行目。display.launch.py が、置換の式を書いた名前について No such file or directory、つまりファイルやフォルダは無い、というエラーで失敗する場合。model:= を付け忘れています。2-3節のとおりです。model:= を urdf の01-myfirst.urdf のように、毎回付けます。
 
 2行目。model:= は付けたのに、display.launch.py が、ファイルが無いというエラーで失敗する場合。model は、urdf_tutorial のパッケージのフォルダからの相対パスで、urdf から書きます。ファイル名の番号とつづり、たとえば06-flexible.urdf などが合っているかを確かめます。自分のファイルは渡せません。7-3節のとおりです。
 
-3行目。パッケージ urdf_tutorial が見つからない、と出る場合。2-1節の導入が済んでいるか、導入した後に開いたターミナルかを確かめます。開いたままのターミナルでは、source で /opt/ros/jazzy の setup.bash を読み込み直します。
+3行目。Package 'urdf_tutorial' not found、つまりパッケージ urdf_tutorial が見つからない、と出る場合。2-1節の導入が済んでいるか、導入した後に開いたターミナルかを確かめます。開いたままのターミナルでは、source で /opt/ros/jazzy の setup.bash を読み込み直します。
 
 4行目。RViz2 の画面にロボットが出ない、または Global Status がエラーの場合。Fixed Frame が、ロボットにあるフレーム、たとえば base_link かを確かめます。7-2節のとおりです。RobotModel の Description Topic が /robot_description か、ターミナル1 に Robot initialized が出ているかも確かめます。
 
-5行目。一部のリンクだけ、原点に重なって描かれ、RobotModel の Status に、そのリンクへの変換が無い、と出る場合。そのリンクの先の、動く関節の角度が届いていません。joint_state_publisher_gui、または joint_state_publisher が動いているか、ros2 topic echo の /joint_states に --once を付けて、その関節の名前が載っているかを確かめます。4-4節のとおりです。
+5行目。一部のリンクだけ、原点に重なって描かれ、RobotModel の Status に、No transform from、つまり、そのリンクからの変換が無い、と出る場合。そのリンクの先の、動く関節の角度が届いていません。joint_state_publisher_gui、または joint_state_publisher が動いているか、ros2 topic echo の /joint_states に --once を付けて、その関節の名前が載っているかを確かめます。4-4節のとおりです。
 
 6行目。スライダーのウィンドウにスライダーが無い場合。表示しているファイルの関節が、すべて固定、つまり fixed かを確かめます。01 から05 は固定だけなので、スライダーはありません。3-5節のとおりです。06 より後を表示します。
 
-7行目。check_urdf が、正しい小数ではない、というエラーで失敗する場合。xacro のファイルを直接渡しています。xacro で展開してから渡します。6-2節のとおりです。
+7行目。check_urdf が、is not a valid float、つまり正しい小数ではない、というエラーで失敗する場合。xacro のファイルを直接渡しています。xacro で展開してから渡します。6-2節のとおりです。
 
 8行目。FreeCAD の AppImage が起動せず、libfuse.so.2 が見つからない、というエラーが出る場合。10-3節の (1) の libfuse2t64 を入れたかを確かめます。
 
@@ -526,7 +526,7 @@ RobotCAD は、FreeCAD に足して使う作業の画面、つまりワークベ
 
 4つ目は、CROSS とは同時に使えないことです。CROSS を入れている場合は、先に外します。これは RobotCAD の README の注意です。
 
-5つ目は、FreeCAD の版です。RobotCAD の README は、FreeCAD の1.1系の AppImage を勧めているので、この節ではそれを使います。AppImage は、インストールせずに、ファイル1つで動く形式です。1.1系の AppImage の中の Python は3.11 で、ファイル名の py311 がそれを表します。README には、FreeCAD の中の Python は3.12 以上、という記述もありますが、アドオンの定義、つまり package.xml の下限は3.11 なので、この節では3.11 の版を使います。別の Python の版の AppImage を選ぶと、上の依存の入る先のフォルダの名前も変わります。
+5つ目は、FreeCAD の版です。RobotCAD の README は、FreeCAD の1.1系の AppImage を勧めているので、この節ではそれを使います。AppImage は、インストールせずに、ファイル1つで動く形式です。1.1系の AppImage の中の Python は3.11 で、ファイル名の py311 がそれを表します。README には、FreeCAD の中の Python は3.12 以上、という記述もありますが、アドオンの定義、つまり package.xml の下限は3.11 なので、この節では3.11 の版を使います。別の Python の版の AppImage を選ぶと、上の依存の入る先のフォルダの名前の末尾の py311 も変わります。
 
 ### 10-3. 導入の手順
 
@@ -572,13 +572,13 @@ RobotCAD の Wiki の、Common usage plan の流れを、この章の言葉で�
 
 ## 12. 公式のドキュメントと参考資料
 
-確かめた状況は、2026年10月16日の時点です。公式チュートリアルの4本と、RViz のユーザーガイドは、原稿で本文を確かめました。urdf_tutorial、urdf_launch、joint_state_publisher は、作るときに導入し、入ったファイルが、GitHub の同じ版と同じであることを確かめました。display.launch.py の構成と引数、model の既定値の不具合、joint_state_publisher の初期値、送る回数、continuous のスライダーの範囲は、ソースを読み、画面なしで起動して確かめました。RViz2 の表示の項目の名前、たとえば Description Topic、Collision Enabled、Show Names などは、導入した RViz2 のプラグインに含まれる文字列で確かめましたが、画面は開いていません。RViz2 の画面の見え方と、スライダーのウィンドウの見た目、7-2節の RobotModel を足した直後の Description Topic の値、7-3節の3つのノードを別々に起動する手順、9節の RViz2 の描画の不具合の対処は、作るときには確かめていない、とあります。10節の RobotCAD は、README と Wiki、アドオンの定義、つまり package.xml、依存を入れる処理、書き出しの処理と launch のひな形のソースを、2026年10月17日に読んで確かめました。FreeCAD 1.1.4 の AppImage の名前と大きさ、チェックサムのファイルの形は、GitHub のリリースで確かめました。書き出しの道具の一覧のページは、原稿で、RobotCAD が載っていることと、保守についての注意を確かめました。導入と画面の操作は、作るときには確かめていない、とあります。
+確かめた状況は、2026年10月16日の時点です。公式チュートリアルの4本と、RViz のユーザーガイドは、公式のドキュメントのソースで本文を確かめました。urdf_tutorial、urdf_launch、joint_state_publisher は、作るときに導入し、入ったファイルが、GitHub の同じ版と同じであることを確かめました。display.launch.py の構成と引数、model の既定値の不具合、joint_state_publisher の初期値、送る回数、continuous のスライダーの範囲は、ソースを読み、画面なしで起動して確かめました。RViz2 の表示の項目の名前、たとえば Description Topic、Collision Enabled、Show Names などは、導入した RViz2 のプラグインに含まれる文字列で確かめましたが、画面は開いていません。RViz2 の画面の見え方と、スライダーのウィンドウの見た目、7-2節の RobotModel を足した直後の Description Topic の値、7-3節の3つのノードを別々に起動する手順、9節の RViz2 の描画の不具合の対処は、作るときには確かめていない、とあります。10節の RobotCAD は、README と Wiki、アドオンの定義、つまり package.xml、依存を入れる処理、書き出しの処理と launch のひな形のソースを、2026年10月17日に読んで確かめました。FreeCAD 1.1.4 の AppImage の名前と大きさ、チェックサムのファイルの形は、GitHub のリリースで確かめました。書き出しの道具の一覧のページは、公式のドキュメントのソースで、RobotCAD が載っていることと、保守についての注意を確かめました。導入と画面の操作は、作るときには確かめていない、とあります。
 
 公式の資料は12項目あります。ROS 2 Jazzy の、URDF で見た目のロボットのモデルを一から作るチュートリアル、つまり3節で、形、原点、色を扱い、RViz2 の画面の例があります。動くロボットのモデルを作るチュートリアル、つまり4節で、関節の種類とスライダーを扱います。物理と衝突の性質を足すチュートリアル、つまり5節で、衝突の形、慣性、接触の係数、関節の動きの性質を扱います。xacro でコードを整理するチュートリアル、つまり6節で、プロパティ、式、マクロを扱います。Python で URDF を robot_state_publisher と使うチュートリアルは、自分のパッケージに URDF を置き、ノードから関節の角度を送って動かすもので、この章では扱っていません。RViz のユーザーガイドは、RViz2 の画面、表示の足し方、Fixed Frame、視点の操作を扱います。tf2 の紹介のチュートリアルは、TF の考え方と、tf2_echo などの道具を扱います。ROS Wiki の urdf の XML のページは、URDF の要素の仕様で、ROS1 の時代の文書ですが、ROS 2 でも同じ書き方を使います。GitHub の ros の urdf_tutorial は、この章で使ったファイルの全体です。GitHub の ros の urdf_launch は、display.launch.py が取り込む表示用の launch です。GitHub の ros の joint_state_publisher は、joint_state_publisher と joint_state_publisher_gui のソースです。そして、Exporting an URDF File のページは、10節で使った、CAD などから URDF を書き出す道具の一覧で、ROS 2 の開発者は保守していない旨の注意があります。
 
 RobotCAD の資料は、コミュニティのもので公式ではない、として、4項目あります。GitHub の drfenixion の freecad.robotcad は、README に、導入の方法、つまりアドオンの管理画面、Docker、Conda と、機能の一覧があり、ライセンスは LGPL-2.1-or-later です。RobotCAD の Wiki は、Common usage plan に、部品の用意から書き出しまでの流れがあります。GitHub の galou の freecad.cross は、RobotCAD の元になった CROSS です。FreeCAD 1.1.4 のリリースのページは、AppImage とチェックサムのファイルがあるページで、最新の版はリリースの一覧で確かめます。
 
-原文の最後には、出典の注記があります。この章の説明と表は、公式チュートリアルの流れに沿って、要点を独自にまとめ直したもので、転載ではありません。公式チュートリアルは CC BY 4.0 です。10節は、RobotCAD、つまり LGPL-2.1-or-later の README、Wiki、ソースと、FreeCAD のリリースのページから、事実を自分の言葉でまとめたもので、文章もコードも転載していません。メニューと画面の文字は、操作のために名前だけを書いた、とあります。コマンドは、公式チュートリアルの例と同じものです。cat、diff、grep、sed、xacro の表示として載せた URDF と xacro のファイルの中身は、urdf_tutorial、つまり David V. Lu!! ほかの、BSD 3-Clause License のファイルの一部を抜粋したものです。--show-args の表示は urdf_tutorial と urdf_launch、つまり BSD 3-Clause License、ノードのログとトピック、TF の表示は、robot_state_publisher と joint_state_publisher、つまり BSD License、RViz2 と tf2_ros と ros2cli、つまり BSD License と Apache License 2.0、check_urdf の表示は urdfdom、つまり BSD License の出力です。
+原文の最後には、出典の注記があります。この章の説明と表は、公式チュートリアルの流れに沿って、要点を独自にまとめ直したもので、転載ではありません。公式チュートリアルは CC BY 4.0 です。10節は、RobotCAD の README、Wiki、ソースと、FreeCAD のリリースのページから、事実を自分の言葉でまとめたもので、文章もコードも転載していません。RobotCAD のライセンスは LGPL-2.1-or-later です。メニューと画面の文字は、操作のために名前だけを書いた、とあります。コマンドは、公式チュートリアルの例と同等のものです。cat、diff、grep、sed、xacro の表示として載せた URDF と xacro のファイルの中身は、urdf_tutorial のファイルの一部を抜粋したものです。urdf_tutorial は David V. Lu!! ほかのもので、ライセンスは BSD 3-Clause License です。--show-args の表示は urdf_tutorial と urdf_launch の出力で、ライセンスは BSD 3-Clause License です。ノードのログとトピック、TF の表示は、robot_state_publisher と joint_state_publisher の出力で BSD License、RViz2 と tf2_ros と ros2cli の出力で BSD License と Apache License 2.0 です。check_urdf の表示は urdfdom の出力で、BSD License です。
 
 以上で、URDF と RViz2 の間章の話を終わります。
 
@@ -586,6 +586,6 @@ RobotCAD の資料は、コミュニティのもので公式ではない、と�
 
 この原稿は、SanghunIm1991 さんの [ros2MinimalPhysicalAi の「間章: URDFでロボットを記述し、RViz2で見る（フェーズ5の補足）」](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/interlude_urdf_rviz.md)を、聞くために要約・意訳したものです。図の [interlude_urdf_rviz_overview.svg](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/interlude_urdf_rviz_overview.svg) は、言葉で説明しました。元にしたのは、[2026年10月17日の版](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/331724d61c947ff6ef4324772abf207e102f3913/docs/interlude_urdf_rviz.md)です。原文の文章と図と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
 
-原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。この章には、原文のリポジトリ自身のコードはありません。
+原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象で、原文では、コマンドは公式チュートリアルの例と同等だとしています。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。この章には、原文のリポジトリ自身のコードはありません。
 
-原文の期待する結果に抜粋された URDF と xacro のファイルの中身は、[urdf_tutorial](https://github.com/ros/urdf_tutorial)（David V. Lu!! ほか、BSD 3-Clause License）のものです。この原稿では、それを写さず、どの要素がどの値で、何が変わったかを言葉で説明しました。ほかの表示の例も、apt、check_urdf（urdfdom）、ros2、tf2_ros、robot_state_publisher、joint_state_publisher、RViz2 などの各ツールの表示を言葉で説明したものです。原文では、説明の流れを [ROS 2 Documentation](https://docs.ros.org/en/jazzy/)（Open Robotics、CC BY 4.0）の公式チュートリアルに沿ってまとめ直したとしています。10節の RobotCAD（LGPL-2.1-or-later）と FreeCAD は、公開の情報から事実をまとめたものです。
+原文の期待する結果に抜粋された URDF と xacro のファイルの中身は、[urdf_tutorial](https://github.com/ros/urdf_tutorial)（David V. Lu!! ほか、BSD 3-Clause License）のものです。この原稿では、それを写さず、どの要素がどの値で、何が変わったかを言葉で説明しました。ほかの表示の例も、各ツールの表示を言葉で説明したものです。ツールのライセンスは、check_urdf の urdfdom と、robot_state_publisher・joint_state_publisher が BSD License、RViz2・tf2_ros・ros2cli が BSD License と Apache License 2.0 です。原文では、説明の流れを [ROS 2 Documentation](https://docs.ros.org/en/jazzy/)（Open Robotics、CC BY 4.0）の公式チュートリアルに沿ってまとめ直し、コマンドはその例と同等だとしています。10節の [RobotCAD](https://github.com/drfenixion/freecad.robotcad)（LGPL-2.1-or-later）と FreeCAD は、公開の情報から事実をまとめたものです。
