@@ -196,7 +196,7 @@ rclpy のノード、つまりフェーズ3-1 と比べると、次のように�
 
 1つ目は include で、stdbool.h と、rcl の rcl.h、rclc の rclc.h と executor.h、std_msgs の msg の int32.h を読み込みます。
 
-2つ目は、関数の外に static で置く変数で、パブリッシャーの publisher、サブスクリプションの subscription、送るメッセージの send_msg、受け取るメッセージの recv_msg、受け取るメッセージの recv_msg を置き、受け取った指令の数を覚える last_command は0 から始めます。
+2つ目は、関数の外に static で置く変数で、パブリッシャーの publisher、サブスクリプションの subscription、送るメッセージの send_msg、受け取るメッセージの recv_msg を置き、受け取った指令の数を覚える last_command は0 から始めます。
 
 3つ目は、タイマーのコールバックの timer_callback です。4つ目は、購読のコールバックの subscription_callback です。5つ目は main で、部品を順に作り、実行器を回し続けます。
 
