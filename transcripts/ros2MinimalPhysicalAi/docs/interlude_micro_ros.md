@@ -3,20 +3,20 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/interlude_micro_ros.md（図は docs/img/interlude_micro_ros_overview.svg）
 原文のコミット: e21773ba3dfe6808e69fde552d6a3304f3b2c958（2026-10-17）
 作成: 2026-10-23、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。原文の冒頭と末尾に、説明と表は micro-ROS の公式サイトの文書（CC BY-ND 4.0）と各リポジトリの説明から、事実を独自にまとめ直したもので、公式サイトの文書は改変を認めないライセンスのため、文章もコードも転載・翻訳せずリンクに留めた、5節のコードは rclc（Apache License 2.0）の関数を使って独自に書いた骨組みで、公式の例の写しではない、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章と図は CC BY 4.0、コマンドは Apache-2.0（それぞれ LICENSE の2と1）。5節の骨組みのコードは、原文では「ファイル: なし（読むための例）」とされ、LICENSE の1の「ファイルとして保存するためのコード」に当たるかははっきりしない（この原稿では写していない）。原文の冒頭と末尾に、説明と表は micro-ROS の公式サイトの文書（CC BY-ND 4.0）と各リポジトリの説明から、事実を独自にまとめ直したもので、公式サイトの文書は改変を認めないライセンスのため、文章もコードも転載・翻訳せずリンクに留めた、5節のコードは rclc（Apache License 2.0）の関数を使って独自に書いた骨組みで、公式の例の写しではない、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、関数・設定・道具の名前、短いコマンドは原文の表記のまま書く。5節の骨組みのコード（C）は写さずに、ブロックの構成と要の行を言葉で説明し、各行の意味は原文の「読むときの要点」に任せた（要の行は、要点に出てこない行だけにした）。図と表（層の比較、通信路、開発の道具、rclc と rclpy の対応、メモリの枠の設定、つまずきやすい点）は言葉で説明する。文字数の上限は設けない
-省いたもの: URL、型の定義へのリンク、gcc の点検のコマンドの細かいオプション（言語の規格と警告の指定だけ言葉で残した）、10節の各リンクのアドレス
+省いたもの: URL、型の定義へのリンク、リンク先のファイル名（フェーズ5-4・6-1）、mermaid 版の図（SVG と同じ内容）、gcc の点検のコマンドの細かいオプション（言語の規格と警告の指定だけ言葉で残した）、10節の各リンクのアドレス
 -->
 
 # 間章: micro-ROS でマイコンを ROS2 につなぐ（聞くための原稿）
 
 これは、ros2MinimalPhysicalAi という教材の、入門の読み物の間章の話です。フェーズ5-4 までを読み終えた人向けの、任意の章です。ここまでの教材では、ノードはすべて PC の上で動き、車両も Gazebo の中のものでした。実際のロボットでは、モーターを回す、センサの値を読む、といった体に近い仕事を、小さなマイコン、つまりマイクロコントローラが受け持つことが多いです。マイコンには、PC のような OS も、何ギガバイトものメモリもありません。それでも、マイコンの上のプログラムを、PC のノードと同じようにトピックでやり取りできる ROS2 のノードにできれば、ros2 topic echo でセンサの値を見たり、PC のノードから指令を送ったりする、これまでと同じ作り方がそのまま使えます。それを実現するのが micro-ROS です。この章では、特定のマイコンに限らず、micro-ROS の仕組みと、プログラムの書き方、開発の道具の選び方、小さなマイコンで気をつけることを、読み物として見ていきます。
 
-想定する環境は、ありません。この章では、コマンドを実行せず、パッケージも導入しません。micro-ROS を実際に使うときは、ROS2 Jazzy の入った PC と、micro-ROS に対応したマイコンのボードが要ります。3節と4節で扱います。前提はフェーズ5-4 ですが、内容としては、トピック、QoS、タイマー、実行器、つまり executor の考え方、つまりフェーズ3-1、3-2b、フェーズ4 までが分かれば読めます。フェーズ6 と7 の本文は、この章に依存しません。所要時間の目安は0.5 から1コマです。言語は C で、5節の骨組みのコードを読みます。書いて動かす実習はありません。
+想定する環境は、ありません。この章では、コマンドを実行せず、パッケージも導入しません。micro-ROS を実際に使うときは、ROS2 Jazzy の入った PC と、micro-ROS に対応したマイコンのボードが要ります。3節と4節で扱います。前提はフェーズ5-4 ですが、内容としては、トピック、QoS、タイマー、実行器、つまり executor の考え方が分かれば読めます。フェーズで言うと、3-1、3-2b、フェーズ4 までです。フェーズ6 と7 の本文は、この章に依存しません。所要時間の目安は0.5 から1コマです。言語は C で、5節の骨組みのコードを読みます。書いて動かす実習はありません。
 
-この章の位置づけの囲みです。実習の無い読み物で、マイコンの種類を限定しません。説明は、micro-ROS の公式サイトの文書と、各リポジトリの説明から、要点を自分の言葉でまとめ直したものです。公式サイトの文書は、改変を認めないライセンス、つまり CC BY-ND 4.0 なので、文章もコードも転載・翻訳せず、リンクだけにしています。5節のコードは、公式の例を写したものではなく、rclc、ライセンスは Apache License 2.0 の関数を使って、独自に書いた骨組みです。
+この章の位置づけの囲みです。実習の無い読み物で、マイコンの種類を限定しません。説明は、micro-ROS の公式サイトの文書と、各リポジトリの説明から、要点を自分の言葉でまとめ直したものです。公式サイトの文書は、改変を認めないライセンス、つまり CC BY-ND 4.0 なので、文章もコードも転載・翻訳せず、リンクだけにしています。5節のコードは、公式の例を写したものではなく、rclc の関数を使って、独自に書いた骨組みです。rclc のライセンスは Apache License 2.0 です。
 
-確かめた範囲の囲みもあります。この章には、実行する手順と、期待する結果はありません。5節のコードは、作るときに、ros2 の rclc の jazzy のブランチのヘッダーと、ROS2 Jazzy のヘッダーを使って、コンパイラの gcc で、C99 の規格と警告を全部出す指定で、文法だけの点検を、警告なしで通しました。実行もリンクもしていません。マイコンへの書き込みと、エージェントにつないで動かすことは、作るときにはしていません。対応するボード、道具、枝、つまりブランチの名前は、作った時点、2026年10月16日の各リポジトリの説明で確かめたもので、今後変わることがあります。
+確かめた範囲の囲みもあります。この章には、実行する手順と、期待する結果はありません。5節のコードは、作るときに、ros2 の rclc の jazzy のブランチのヘッダーと、ROS2 Jazzy のヘッダーを使って、コンパイラの gcc で、C99 の規格と、主な警告を出す指定で、文法だけの点検を、警告なしで通しました。実行もリンクもしていません。マイコンへの書き込みと、エージェントにつないで動かすことは、作るときにはしていません。対応するボード、道具、枝、つまりブランチの名前は、作った時点、2026年10月16日の各リポジトリの説明で確かめたもので、今後変わることがあります。
 
 この原稿では、コードを書き写さず、表と図とあわせて、言葉で説明します。
 
@@ -54,7 +54,7 @@ micro-ROS が主な対象にしているのは、RAM が数十キロバイト以
 
 ## 2. 全体像
 
-ここに図が1枚あります。左に、灰色の破線の縦長の枠があり、見出しは、マイコン、RTOS か、OS なし、です。右下に、同じく灰色の破線の横長の枠があり、見出しは、PC、Linux など、です。
+ここに図が1枚あります。SVG と mermaid の版がありますが、内容は同じです。左に、灰色の破線の縦長の枠があり、見出しは、マイコン、RTOS か、OS なし、です。右下に、同じく灰色の破線の横長の枠があり、見出しは、PC、Linux など、です。
 
 マイコンの枠の中には、4つの箱が、上から下へ縦に並びます。1つ目は薄いオレンジ色の箱で、自分のプログラム、センサを読む、指令を受ける。2つ目からは薄い青の箱で、2つ目は rclc プラス rcl、ノード、トピック、実行器。3つ目は rmw_microxrcedds、静的なメモリの枠で動かす。4つ目は Micro XRCE-DDS、クライアント、と書いてあります。上下に隣り合う箱の間は、両向きの矢印でつながっています。
 
@@ -136,7 +136,7 @@ micro-ROS を使うマイコンのプログラムは、マイコン向けに組�
 
 4つ目は、ESP-IDF の部品と Zephyr の部品です。ESP32 の公式の開発環境の ESP-IDF や、Zephyr で作るプロジェクトに組み込む場面に向きます。確かめたことは、どちらも jazzy の枝があることです。
 
-どの道具でも、プログラムの書き方、つまり5節の rclc は同じです。違うのは、ビルドの仕方、通信路の設定の仕方、メモリの枠の設定、つまり6-1節の置き場所です。
+どの道具でも、プログラムの書き方、つまり5節の rclc は同じです。違うのは、ビルドの仕方、通信路の設定の仕方、メモリの枠の設定の置き場所です。メモリの枠は6-1節で扱います。
 
 micro-ROS の公式サイトのチュートリアルの多くは、作った時点では、ROS2 Humble の時代に書かれたもので、ページに Written for Humble の印があります。Jazzy で使うときは、各リポジトリの jazzy の枝の説明を合わせて読むのがよい、とあります。5節の rclc_timer_init_default2 のように、関数が替わっていることもあります。
 
@@ -196,7 +196,7 @@ rclpy のノード、つまりフェーズ3-1 と比べると、次のように�
 
 1つ目は include で、stdbool.h と、rcl の rcl.h、rclc の rclc.h と executor.h、std_msgs の msg の int32.h を読み込みます。
 
-2つ目は、関数の外に static で置く変数で、パブリッシャーの publisher、サブスクリプションの subscription、送るメッセージの send_msg、受け取るメッセージの recv_msg、そして受け取った指令の数を覚える last_command を、0 で用意します。
+2つ目は、関数の外に static で置く変数で、パブリッシャーの publisher、サブスクリプションの subscription、送るメッセージの send_msg、受け取るメッセージの recv_msg、受け取るメッセージの recv_msg を置き、受け取った指令の数を覚える last_command は0 から始めます。
 
 3つ目は、タイマーのコールバックの timer_callback です。4つ目は、購読のコールバックの subscription_callback です。5つ目は main で、部品を順に作り、実行器を回し続けます。
 
@@ -306,11 +306,11 @@ reliable で送ると、メッセージごとに、届いたかの確認を待�
 
 ## 10. 公式のドキュメントと参考資料
 
-確かめた状況は、2026年10月16日の時点です。micro-ROS の公式サイトの文書のうち、Features and Architecture、Supported Hardware、License Overview、Introduction to Client Library、Micro XRCE-DDS、micro-ROS Build System、External Build Systems、First micro-ROS Application on Linux、rclc のプログラミングの各ページ、つまり Publishers and subscribers、Executor and timers、Quality of service、micro-ROS utilities、そして Middleware Configuration と、Handling messages memory in micro-ROS は、原稿、つまり GitHub の micro-ROS の micro-ROS.github.io で本文を確かめ、公開しているサイト、micro.vulcanexus.org で、同じパスのページが開けることを確かめました。micro_ros_arduino と micro_ros_platformio の対応ボードの一覧と設定は、各リポジトリの説明で、jazzy の枝の有無とライセンスは、GitHub のリポジトリの情報で確かめました。rclc の関数の引数と、rclc_timer_init_default の非推奨は、ros2 の rclc の jazzy の枝のヘッダーで確かめました。メモリを節約する設定のファイルの名前は、micro_ros_platformio と micro_ros_arduino の対応ボードの表で、micro_ros_agent が Jazzy の apt に無いことは apt-cache policy で、ros2 topic echo の QoS の選び方は、導入した ros2cli の ros2topic のソースで、usbipd bind に管理者の権限が要ることは、usbipd-win の説明で確かめました。8節の症状と確かめどころは、実際に起こして確かめたものではない、とあります。
+確かめた状況は、2026年10月16日の時点です。micro-ROS の公式サイトの文書のうち、Features and Architecture、Supported Hardware、License Overview、Introduction to Client Library、Micro XRCE-DDS、micro-ROS Build System、External Build Systems、First micro-ROS Application on Linux、rclc のプログラミングの各ページ、つまり Publishers and subscribers、Executor and timers、Quality of service、micro-ROS utilities、そして Middleware Configuration と、Handling messages memory in micro-ROS の、14のページは、公式サイトの文書のソース、つまり GitHub の micro-ROS の micro-ROS.github.io で本文を確かめました。公開しているサイトの micro.vulcanexus.org でも、同じパスのページが開けることを確かめました。micro_ros_arduino と micro_ros_platformio の対応ボードの一覧と設定は、各リポジトリの説明で、jazzy の枝の有無とライセンスは、GitHub のリポジトリの情報で確かめました。rclc の関数の引数と、rclc_timer_init_default の非推奨は、ros2 の rclc の jazzy の枝のヘッダーで確かめました。メモリを節約する設定のファイルの名前は、micro_ros_platformio と micro_ros_arduino の対応ボードの表で、micro_ros_agent が Jazzy の apt に無いことは apt-cache policy で、ros2 topic echo の QoS の選び方は、導入した ros2cli の ros2topic のソースで、usbipd bind に管理者の権限が要ることは、usbipd-win の説明で確かめました。8節の症状と確かめどころは、実際に起こして確かめたものではない、とあります。
 
 公式の資料は、7つのまとまりです。
 
-1つ目は、micro-ROS の公式サイトです。文書は CC BY-ND 4.0 で、作った時点には、前のアドレスの micro.ros.org から、今のアドレスに移っていました。その中の8つのページを挙げています。Features and Architecture は、特徴と層の構成です。Supported Hardware は、対象のマイコンと、対応するボードです。Micro XRCE-DDS は、クライアントとエージェント、通信路です。micro-ROS Build System と External Build Systems は、micro_ros_setup の4段階と、ほかの開発環境の部品です。First micro-ROS Application on Linux は、マイコンを使わず、PC の上で micro-ROS のノードとエージェントを動かすチュートリアルで、最初に試すのに向く、とあります。Programming with rcl and rclc の Overview は、rclc でのノード、パブリッシャー、実行器、QoS、時刻合わせなどの書き方です。Middleware Configuration は、6-1節の枠の数と MTU の設定です。Handling messages memory in micro-ROS は、6-2節の文字列と配列のメモリの用意です。
+1つ目は、micro-ROS の公式サイトです。文書は CC BY-ND 4.0 で、作った時点には、前のアドレスの micro.ros.org から、今のアドレスに移っていました。その中の8つの項目、9つのページを挙げています。Features and Architecture は、特徴と層の構成です。Supported Hardware は、対象のマイコンと、対応するボードです。Micro XRCE-DDS は、クライアントとエージェント、通信路です。micro-ROS Build System と External Build Systems は、micro_ros_setup の4段階と、ほかの開発環境の部品です。First micro-ROS Application on Linux は、マイコンを使わず、PC の上で micro-ROS のノードとエージェントを動かすチュートリアルで、最初に試すのに向く、とあります。Programming with rcl and rclc の Overview は、rclc でのノード、パブリッシャー、実行器、QoS、時刻合わせなどの書き方です。Middleware Configuration は、6-1節の枠の数と MTU の設定です。Handling messages memory in micro-ROS は、6-2節の文字列と配列のメモリの用意です。
 
 2つ目は、GitHub の micro-ROS の micro_ros_setup と micro-ROS-Agent で、ビルドの道具とエージェントです。ライセンスは Apache License 2.0 です。
 
@@ -324,7 +324,7 @@ reliable で送ると、メッセージごとに、届いたかの確認を待�
 
 7つ目は、GitHub の dorssel の usbipd-win で、3-3節の、WSL2 で USB の機器を使う道具です。サービスとファイアウォールの規則の説明もあります。
 
-原文の最後には、出典の注記があります。この章の説明と表は、上の公式の文書と各リポジトリの説明から、事実を独自にまとめ直したもので、転載・翻訳ではありません。micro-ROS の公式サイトの文書は CC BY-ND 4.0 のため、文章とコードを改変して載せることはせず、リンクに留めた、とあります。5節のコードは、rclc、ライセンスは Apache License 2.0 の関数を使って独自に書いたもので、公式の例の写しではありません。関数、設定、道具の名前は、各ソフトウェアのものです。
+原文の最後には、出典の注記があります。この章の説明と表は、上の公式の文書と各リポジトリの説明から、事実を独自にまとめ直したもので、転載・翻訳ではありません。micro-ROS の公式サイトの文書は CC BY-ND 4.0 のため、文章とコードを改変して載せることはせず、リンクに留めた、とあります。5節のコードは、rclc の関数を使って独自に書いたもので、公式の例の写しではありません。rclc のライセンスは Apache License 2.0 です。関数、設定、道具の名前は、各ソフトウェアのものです。
 
 以上で、micro-ROS の間章の話を終わります。
 
@@ -332,6 +332,6 @@ reliable で送ると、メッセージごとに、届いたかの確認を待�
 
 この原稿は、SanghunIm1991 さんの [ros2MinimalPhysicalAi の「間章: micro-ROSでマイコンをROS2につなぐ（入門・読み物）」](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/interlude_micro_ros.md)を、聞くために要約・意訳したものです。図の [interlude_micro_ros_overview.svg](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/img/interlude_micro_ros_overview.svg) は、言葉で説明しました。元にしたのは、[2026年10月17日の版](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/e21773ba3dfe6808e69fde552d6a3304f3b2c958/docs/interlude_micro_ros.md)です。原文の文章と図と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
 
-原稿の中に原文の表記のまま書いたコマンドと、コードの関数や変数の名前は、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。5節の骨組みのコードは写さず、構成と要の行を言葉で説明しました。
+原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。5節の骨組みのコードは、原文では読むための例とされていて、この原稿では写さず、構成と要の行を言葉で説明しました。
 
 原文の説明は、[micro-ROS](https://micro.vulcanexus.org/) の公式サイトの文書（CC BY-ND 4.0）と各リポジトリの説明から、事実を独自にまとめ直したもので、原文では、公式サイトの文書の文章とコードを転載・翻訳せず、リンクに留めたとしています。この原稿も、公式サイトの文書は直接使わず、原文の説明だけを元にしています。5節のコードは、原文では、[rclc](https://github.com/ros2/rclc)（Apache License 2.0）の関数を使って独自に書いたもので、公式の例の写しではないとしています。関数・設定・道具の名前は、各ソフトウェアのものです。
