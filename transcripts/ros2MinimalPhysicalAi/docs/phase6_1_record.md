@@ -268,7 +268,7 @@ cd でホームの ros2_ws に移り、colcon build に、--symlink-install と�
 
 記録します。ros2 launch learn_bringup record.launch.py に、bag:= で、ドル記号の HOME の ros2_ws の bags の sim_default を渡します。
 
-期待する結果、抜粋です。vehicle_plant と pi_controller のログは省いてあり、時刻、pid、パスは実行ごとに変わります。まず、vehicle_plant-1、pi_controller-2、target_generator-3、ros2-4 の4つのプロセスが起動し、ros2-4 が、sim_default への記録を始める、と出します。target_generator は、0.1秒で目標を0.00 にし、記録の側は、要求されたトピックをすべて購読した、と出します。そのあと、target_generator が、10.1秒で目標を毎秒10メートルに、50.0秒で5メートルに、80.0秒で0 にした、と出し、100.0秒で、end_time に達したので終わる、つまり end_time reached, shutting down と出します。続いて、target_generator-3 がきれいに終わった、つまり finished cleanly、そして launch が、target_generator-3 について、止めることになっていたプロセスが終わったので、起動したシステムを止める、と出します。ros2-4、pi_controller-2、vehicle_plant-1 に SIGINT を送った、という行が続き、記録の側が Recording stopped を出し、残りの3つのプロセスも finished cleanly で終わります。
+期待する結果、抜粋です。vehicle_plant と pi_controller のログは省いてあり、時刻、pid、パスは実行ごとに変わります。まず、vehicle_plant-1、pi_controller-2、target_generator-3、ros2-4 の4つのプロセスが起動し、ros2-4 が、sim_default への記録を始める、と出します。target_generator は、0.1秒で目標を毎秒0メートルにし、記録の側は、要求されたトピックをすべて購読した、と出します。そのあと、target_generator が、10.1秒で目標を毎秒10メートルに、50.0秒で5メートルに、80.0秒で0 にした、と出し、100.0秒で、end_time に達したので終わる、つまり end_time reached, shutting down と出します。続いて、target_generator-3 がきれいに終わった、つまり finished cleanly、そして launch が、target_generator-3 について、止めることになっていたプロセスが終わったので、起動したシステムを止める、と出します。ros2-4、pi_controller-2、vehicle_plant-1 に SIGINT を送った、という行が続き、記録の側が Recording stopped を出し、残りの3つのプロセスも finished cleanly で終わります。
 
 読み方は4つです。
 
@@ -290,7 +290,7 @@ cd でホームの ros2_ws に移り、colcon build に、--symlink-install と�
 
 書き換えたら、params_file:= で渡して記録します。チルダではなく、ドル記号の HOME と書く理由は、フェーズ5-3 の4-5節にあります。YAML を絶対パスで渡すので、この YAML のためにビルドし直す必要はありません。ros2 launch learn_bringup record.launch.py に、params_file:= で、HOME の ros2_ws の config の slow_brake_record.yaml を、bag:= で、HOME の ros2_ws の bags の slow_brake を渡します。
 
-期待する結果、抜粋です。target_generator と記録のログと、止まる部分だけです。target_generator が0.1秒で目標0.00 を出し、記録の側が slow_brake への記録を始め、10.0秒、50.0秒、80.0秒で目標を切り替え、100.0秒で end_time reached を出します。launch が、起動したシステムを止める、と出し、記録の側が Recording stopped を出します。
+期待する結果、抜粋です。target_generator と記録のログと、止まる部分だけです。target_generator が0.1秒で目標を毎秒0メートルにした、と出し、記録の側が slow_brake への記録を始め、10.0秒、50.0秒、80.0秒で目標を切り替え、100.0秒で end_time reached を出します。launch が、起動したシステムを止める、と出し、記録の側が Recording stopped を出します。
 
 4-5節と同じく、100秒で止まれば記録できています。YAML の end_time と目標の階段は vehicle_sim_record.yaml と同じなので、sim_default と同じ長さの記録になり、違うのはブレーキの遅れだけです。この記録 slow_brake は、6節の末尾の課題3 と、フェーズ6-3 で使います。
 

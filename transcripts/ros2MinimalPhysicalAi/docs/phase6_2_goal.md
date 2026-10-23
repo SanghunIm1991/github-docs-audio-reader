@@ -68,7 +68,7 @@ goal_monitor の箱の下からは、破線の矢印が下りてから左へ折�
 
 式は、d に、v かける デルタ t を足したものを、新しい d にする、というものです。d は走った距離です。原文では、左向きの矢印の記号で書いていて、これは、右辺を計算して、左辺の d に入れ直す、という意味です。フェーズ5-1 の2-4節の、x の k プラス1 が、x の k に何かを足したもの、という式と同じことを、1つの変数を上書きしていく形で書いたものです。
 
-フェーズ5-1 の2-4節のオイラー法で、速度から位置を計算するのと同じ考え方です。フェーズ5-3 の自作のプラントは位置を持たないので、フェーズ5-3 では案A しか使えません。一方、この方法には、次の3つの誤差の出どころがあります。
+フェーズ5-1 の2-4節のオイラー法で、速度から位置を計算するのと同じ考え方です。フェーズ5-3 の自作のプラントは位置を持たないので、フェーズ5-3 では案A しか使えません。一方、この方法の誤差について、次の3つのことがあります。
 
 1つ目は、時間の測り方です。デルタ t は、見張りのノードにメッセージが届いた時刻の差で測ります。届くまでの遅れのばらつきが、そのままデルタ t に入ります。記録を再生して聞かせると、再生の速さでもデルタ t が変わります。この手順書の7節の末尾の課題2 です。PC の時計が飛ぶ環境では、フェーズ6-1 の2-2節の注記のとおり、その分も入ります。そのため、このノードでは、デルタ t を単調増加する時計で測り、フェーズ5-4 ではシミュレーション時刻で測ります。3-2節の解説で扱います。
 
@@ -110,11 +110,11 @@ goal_monitor の箱の下からは、破線の矢印が下りてから左へ折�
 
 goal_monitor_node.py の解説は、4つです。
 
-1つ目は、時計の選び方で、__init__ の中です。案A のデルタ t を測る時計を、use_sim_time の値で選びます。use_sim_time が true、つまりフェーズ5-4 の一式なら、ノードの時計、つまり self.get_clock() を使います。ノードの時計は、フェーズ5-4 の5節のとおりシミュレーション時刻に従うので、Gazebo の物理と同じ時計で積み上げられます。そうでなければ、つまりフェーズ5-3 の一式なら、単調増加する時計を使います。ノードの時計は PC の現在時刻で、時計が飛ぶと、その分だけ距離が多く足されてしまいます。毎秒10メートルで走っているときに数秒飛べば、数十メートルで、たとえば3秒なら30メートルです。use_sim_time は、自分で宣言しなくても、すべてのノードが持っているパラメータなので、get_parameter でそのまま読めます。Tips集の1節の話です。
+1つ目は、時計の選び方で、__init__ の中です。案A のデルタ t を測る時計を、use_sim_time の値で選びます。use_sim_time が true のとき、これはフェーズ5-4 の一式ですが、ノードの時計の self.get_clock() を使います。ノードの時計は、フェーズ5-4 の5節のとおりシミュレーション時刻に従うので、Gazebo の物理と同じ時計で積み上げられます。そうでないとき、これはフェーズ5-3 の一式ですが、単調増加する時計を使います。ノードの時計は PC の現在時刻で、時計が飛ぶと、その分だけ距離が多く足されてしまいます。毎秒10メートルで走っているときに数秒飛べば、数十メートルで、たとえば3秒なら30メートルです。use_sim_time は、自分で宣言しなくても、すべてのノードが持っているパラメータなので、get_parameter でそのまま読めます。Tips集の1節の話です。
 
 2つ目は、案A の on_velocity です。最初の1回は、時刻を覚えるだけにします。前回が無いので、デルタ t を求められないためです。2回目からは、2-1節の式のとおり、msg.data かける dt を足します。ログは、throttle_duration_sec を5.0 にして、5秒に1回に間引きます。フェーズ5-1 の vehicle_plant のログと同じ仕組みです。間引く間隔は、use_sim_time に関係なく、PC の現在時刻で数えます。rclpy のソースで、間引きに使う時計の既定が、PC の現在時刻の Clock になっているためです。
 
-3つ目は、案B の on_odom です。最初に届いた位置を、走り始めた地点として start_position に覚え、今の位置との距離を求めて、scale で割って、実車の単位に直します。距離は、x の差の2乗と y の差の2乗を足したものの平方根で、math.hypot で求めます。走り始めた地点を覚えるのは、OdometryPublisher の位置が、ワールドの原点を基準にした位置だからです。フェーズ5-0 の5-5節で見た DiffDrive のオドメトリは、走り始めた地点が原点でした。同じ車両でも、プラグインによって、位置の基準が違います。緑の車両は、y がマイナス2メートルの所から走り始めるので、フェーズ5-0 の2節の表のとおりです。今の位置の原点からの距離をそのまま使うと、止まっているのに、2 を0.025 で割った80メートル、走ったことになってしまいます。これは、手順書を作るときに、最初に書いたコードで実際に起きた、とあります。
+3つ目は、案B の on_odom です。最初に届いた位置を、走り始めた地点として start_position に覚え、今の位置との距離を求めて、scale で割って、実車の単位に直します。距離は、x の差の2乗と y の差の2乗を足したものの平方根で、math.hypot で求めます。走り始めた地点を覚えるのは、OdometryPublisher の位置が、ワールドの原点を基準にした位置だからです。フェーズ5-0 の5-5節で見た DiffDrive のオドメトリは、走り始めた地点が原点でした。同じ車両でも、プラグインによって、位置の基準が違います。緑の車両は、フェーズ5-0 の2節の表のとおり、y がマイナス2メートルの所から走り始めます。そのため、今の位置の原点からの距離をそのまま使うと、止まっているのに、2 を0.025 で割った80メートル、走ったことになってしまいます。これは、手順書を作るときに、最初に書いたコードで実際に起きた、とあります。
 
 4つ目は check です。判定に使う距離がゴールに達したら、ログを出して、rclpy.shutdown を呼びます。フェーズ6-1 の target_generator と同じく、main の spin が戻ってきて、プロセスが終わります。self.done で、1回だけに限っています。rclpy.shutdown を呼んだ後も、すでに届いていたメッセージのコールバックが呼ばれることがあり、2回目の rclpy.shutdown はエラーになるためです。
 
@@ -154,7 +154,7 @@ gazebo_plant_goal.yaml、つまりフェーズ5-4 の一式で案B のほうに�
 
 40行ほどのコードで、ブロックは、import と、generate_launch_description の関数の2つです。関数の前のコメントには、フェーズ6-1 の record.launch.py に、ゴールの見張りのノード goal_monitor を足して起動し、goal_monitor がゴールに達して終わると、記録を含めた launch 全体が止まる、とあります。
 
-関数は、まず3つの変数、つまり引数 scenario の値、引数 params_file の値、learn_bringup の share のフォルダを用意します。そのあと、LaunchDescription に5つの要素を並べて返します。引数の宣言が3つ、つまり scenario、bag、params_file で、説明はフェーズ6-1 の record.launch.py と同じです。そして、record.launch.py の取り込みが1つと、goal_monitor の Node が1つです。各部分の役目は、次の表のとおりで、表に出てこない要の行はありません。
+関数は、まず3つの変数、つまり引数 scenario の値、引数 params_file の値、learn_bringup の share のフォルダを用意します。そのあと、LaunchDescription に5つの要素を並べて返します。引数の宣言が3つ、つまり scenario、bag、params_file で、説明は、params_file の既定の書き方を除いて、フェーズ6-1 の record.launch.py と同じです。そして、record.launch.py の取り込みが1つと、goal_monitor の Node が1つです。各部分の役目は、次の表のとおりで、表に出てこない要の行はありません。
 
 record_goal.launch.py の解説の表は2列で、4行あります。列は、部分と、何をしているか、です。
 
@@ -182,15 +182,15 @@ ros2 launch learn_bringup record_goal.launch.py に、bag:= で、ドル記号�
 
 期待する結果、抜粋です。vehicle_plant と pi_controller のログと、ros2 bag record の途中のログは省いてあり、時刻、pid、パスは実行ごとに変わります。
 
-まず、vehicle_plant-1、pi_controller-2、target_generator-3、ros2-4、goal_monitor-5 の5つのプロセスが起動します。goal_monitor が、案A の距離が0.0メートル、案B はハイフン、と出し、target_generator が0.1秒で目標を0.00 にし、記録の側が sim_goal への記録を始めます。target_generator が、10.0秒で目標を毎秒10メートルにしたあと、goal_monitor の距離の行が、5秒ごとに続きます。途中で、target_generator が、50.0秒で目標を毎秒5メートルにした行が挟まります。最後に、ゴールの450メートルに達した、つまり goal reached と出て、案A の距離は450.0メートルです。
+まず、vehicle_plant-1、pi_controller-2、target_generator-3、ros2-4、goal_monitor-5 の5つのプロセスが起動します。goal_monitor が、案A の距離が0.0メートル、案B はハイフン、と出し、target_generator が0.1秒で目標を毎秒0メートルにし、記録の側が sim_goal への記録を始めます。target_generator が、10.0秒で目標を毎秒10メートルにしたあと、goal_monitor の距離の行が、5秒ごとに続きます。途中で、target_generator が、50.0秒で目標を毎秒5メートルにした行が挟まります。最後に、goal reached の行が出ます。
 
-そのあと、goal_monitor-5 が finished cleanly で終わり、launch が、goal_monitor-5 について、止めることになっていたプロセスが終わったので、起動したシステムを止める、と出します。ros2-4、target_generator-3、pi_controller-2、vehicle_plant-1 に SIGINT を送り、記録の側が Recording stopped を出します。残りのプロセスも finished cleanly で終わり、その途中で、launch が target_generator-3 についても、同じく、起動したシステムを止める、と出します。
+そのあと、goal_monitor-5 が finished cleanly で終わり、launch が全体を止め始めます。ros2-4、target_generator-3、pi_controller-2、vehicle_plant-1 に SIGINT を送り、記録の側が Recording stopped を出します。残りのプロセスも finished cleanly で終わり、その途中で、target_generator-3 についても、launch の同じ形の行が出ます。
 
 読み方は5つです。
 
 1つ目。goal_monitor の距離は、目標が毎秒10メートルの区間で、5秒に約50メートル、たとえば179.8、229.8、279.8、329.8 と増え、毎秒5メートルの区間で、約25メートルずつ増えます。
 
-2つ目。距離が450メートルに達すると、goal reached の行が出て、goal_monitor が終わります。launch が、was required: shutting down launched system と出して、target_generator を含む残りのプロセスを止めます。フェーズ6-1 と同じく、Traceback は出ません。
+2つ目。距離が450メートルに達すると、goal reached の行が出て、goal_monitor が終わります。案A の距離は450.0メートルです。launch が、was required: shutting down launched system、つまり止めることになっていたプロセスが終わったので全体を止める、と出して、target_generator を含む残りのプロセスを止めます。フェーズ6-1 と同じく、Traceback は出ません。
 
 3つ目。target_generator の後にも、was required の行が出ます。target_generator にも on_exit=Shutdown() が付いているためで、全体はすでに止まり始めているので、何も変わりません。
 
@@ -206,7 +206,7 @@ PC が重い場合は、フェーズ6-1 の5節と同じく、gz_args に -s を
 
 期待する結果、抜粋です。goal_monitor と target_generator のログと、止まる部分です。
 
-goal_monitor-7 が起動し、target_generator が0.1秒で目標を0.00 にします。goal_monitor は、最初から、案A も案B も0.0メートル、と出します。target_generator が、15.1秒で目標を毎秒10メートルにしたあと、案A と案B の距離を並べた行が続き、途中で、55.0秒で目標を毎秒5メートルにした行が挟まります。最後に goal reached と出て、案A も案B も450.0メートルです。そのあと、goal_monitor-7 が finished cleanly で終わり、launch が、起動したシステムを止める、と出します。いくつかの行のあと、gazebo-1 について、ERROR として、SIGINT を受けてから5秒たっても止まらなかったので SIGTERM に強める、と、プロセスが終了コード マイナス15 で死んだ、と出ます。
+goal_monitor-7 が起動し、target_generator が0.1秒で目標を毎秒0メートルにします。goal_monitor は、最初から、案A と案B の距離を並べた行を出します。target_generator が、15.1秒で目標を毎秒10メートルにしたあとも、その行が続き、途中で、55.0秒で目標を毎秒5メートルにした行が挟まります。最後に goal reached の行が出ます。そのあと、goal_monitor-7 が finished cleanly で終わり、launch が、起動したシステムを止める、と出します。いくつかの行のあと、gazebo-1 について、ERROR として、SIGINT を受けてから5秒たっても止まらなかったので SIGTERM に強める、と、プロセスが終了コード マイナス15 で死んだ、と出ます。
 
 読み方を見ていきます。
 
@@ -240,7 +240,7 @@ goal_monitor-7 が起動し、target_generator が0.1秒で目標を0.00 にし�
 
 1つ目。強化学習では、同じ条件の試行を何千回も繰り返し、試行ごとの結果を比べます。判定の基準が試行ごとに少しずつずれると、その分だけ、ゲインが良かったのか、判定がずれただけなのか、の区別がつきにくくなります。案B は、積み上げの誤差が、試行ごとにばらつくことがありません。
 
-2つ目。案A の誤差は、条件によっては小さくありません。PC の負荷が高くて取りこぼしが増えたとき、届く間隔が実際の時間とずれたとき、つまりこの節の末尾の課題2 や、時計の選び方を誤ったとき、速度の推定に偏りがあるとき、たとえば実物の車輪の滑りでは、足し込むたびに誤差が積み重なります。
+2つ目。案A の誤差は、条件によっては小さくありません。PC の負荷が高くて取りこぼしが増えたとき、届く間隔が実際の時間とずれたとき、これはこの節の末尾の課題2 の話です。また、時計の選び方を誤ったときや、速度の推定に偏りがあるとき、たとえば実物の車輪の滑りでも、足し込むたびに誤差が積み重なります。
 
 3つ目。一方、案B は、2-2節の注記のとおり、シミュレーションだからこそ真の値を使えます。実物へ移すときは、真の値の代わりに、別の手段、たとえば GPS やカメラで測った位置を使うことになります。
 
@@ -282,7 +282,7 @@ goal_monitor-7 が起動し、target_generator が0.1秒で目標を0.00 にし�
 
 5行目。フェーズ5-4 の一式で、案A の距離が、案B よりはっきり大きい、または小さい場合です。gazebo_plant_goal.yaml の goal_monitor に、use_sim_time を true と書いたかを確かめます。書かないと、現実の時間で積み上げるので、RTF が100パーセントを下回る環境では、ずれます。
 
-6行目。goal_monitor が、No executable found、つまり実行ファイルが見つからない、で起動しない場合です。setup.py の entry_points に足したか、つまり3-3節。ビルドし直して、source install/setup.bash をしたかを確かめます。
+6行目。goal_monitor が、No executable found、つまり実行ファイルが見つからない、で起動しない場合です。setup.py の entry_points に足したかを確かめます。3-3節の話です。また、ビルドし直して、source install/setup.bash をしたかを確かめます。
 
 7行目。記録の後も Gazebo が残る場合です。フェーズ6-1 の8節の表と同じで、pgrep -af の gz sim で確かめ、残っていれば止めます。
 
@@ -310,4 +310,4 @@ goal_monitor-7 が起動し、target_generator が0.1秒で目標を0.00 にし�
 
 原稿の中に原文の表記のまま書いたコマンドと、コードの関数やクラスの名前は、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。サンプルコードは写さず、構成と要の行を言葉で説明しました。
 
-期待する結果の表示の例は、原文では、colcon・launch・rosbag2 などの各ツールの表示で、この原稿では、写さずに言葉で説明しました。原文では、launch のイベントハンドラを [ROS 2 Documentation](https://docs.ros.org/en/jazzy/)（Open Robotics、CC BY 4.0）で、OdometryPublisher を [Gazebo Sim](https://gazebosim.org/) の API リファレンスで確かめたとしています。
+期待する結果の表示の例は、原文では、colcon・launch・rosbag2 などの各ツールの表示で、この原稿では、写さずに言葉で説明しました。原文では、参考資料として、launch のイベントハンドラを扱う [ROS 2 Documentation](https://docs.ros.org/en/jazzy/)（Open Robotics、CC BY 4.0）のページと、[Gazebo Sim](https://gazebosim.org/) の OdometryPublisher の API リファレンスを挙げています。
