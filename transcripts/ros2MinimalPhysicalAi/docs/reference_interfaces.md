@@ -5,7 +5,7 @@
 作成: 2026-10-24、Claude Code が手作業で作成（原稿化スキルはまだない）
 原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。原文の末尾に、文法と型の対応は、公式ドキュメント（CC BY 4.0）と手元の定義ファイル・生成済みのコード・rosidl_adapter から確かめ、自分の言葉でまとめたもので、期待する結果に載せた標準の型の定義は ros2 interface show の表示（定義の元は common_interfaces・rcl_interfaces で、Apache License 2.0）、自作の型の定義ファイル・サンプル・文章は独自に書いたもの、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: 英語の略語や製品名、型・項目・関数の名前、短いコマンドは原文の表記のまま書く。単位は「毎秒のメートル」のように読む。定義ファイル（VehicleState.msg・SetGains.srv・DriveDistance.action）と、CMakeLists.txt・package.xml に足す行は、写さずに、項目の名前と型、ブロックの役割を言葉で説明した。CMakeLists.txt と package.xml に足す行は、原文の表がすべての行を説明しているので、要の行は立てなかった。C++ の使い方の例は、原文の説明に出てこない要の行（pedal に定数を入れる行）を言葉で説明した。期待する結果（ros2 interface・ros2 pkg create・colcon build・python3 の表示）は写さず、期待する結果の側では骨組みを言い、値は原文の説明の側で1回だけ読んだ。6-4節の ros2 interface show の表示は、6-2節で読んだ定義と同じなので、値を読まずに「6-2節で書いた定義」と言った。図と表（3つの種類、名前の書き方、基本の型、配列、名前の決まり、標準のパッケージ、調べるコマンド、自作する3つの型、書き足した行、つまずきやすい点、教材のどこで何を使ったか）は言葉で説明し、表の値は全部読んだ。ホームのフォルダは「ホームの」と言い換えた。公式ドキュメントの節は、リンクの題名と括弧の説明を読んだ。文字数の上限は設けない
-省いたもの: URL、リンク先のファイル名、型の定義へのリンク、mermaid 版の図（SVG と同じ内容で、折りたたみになっている）、2-4節の Quaternion の x・y・z の既定値の0、2-5節の Log の定数のうち INFO 以外の値、ros2 pkg create の表示の版数・説明・作ったフォルダとファイルの行の細部と、メンテナのダミーのメールアドレス、ビルドの秒数、6-6節のエラーの英文のうち、名前の正規表現のパターン（意味だけを言った）
+省いたもの: URL、リンク先のファイル名、型の定義へのリンク、mermaid 版の図（SVG と同じ内容で、折りたたみになっている）、2-4節の Quaternion の x・y・z の既定値の0、2-5節の Log の定数のうち INFO 以外の値、ros2 pkg create の表示のうち、コマンドで指定した値（パッケージの名前・作成先・メンテナ・ライセンス・ビルドの種類）と、版数・説明・作ったフォルダとファイルの行の細部と、メンテナのダミーのメールアドレス、ビルドの秒数、6-4節の ros2 interface show の表示のうち定義の部分（6-2節と同じ）と、字下げで出る Header の中身の名前、6-5節の python3 の表示の値（渡した値・6-2節の定数・既定の0や空の値）、6-5節の C++ の例を書く場所の例（learn_cpp の src の下の .cpp）、6-6節のエラーの英文のうち、名前の正規表現のパターン（意味だけを言った）
 -->
 
 # 参考資料: ROS2 の標準のデータ型とインターフェース、自作する方法も（聞くための原稿）
@@ -68,15 +68,15 @@ std_msgs の msg の Float64 は、std_msgs パッケージの、メッセージ
 
 インターフェースの本体は、.msg、.srv、.action という、文字だけの定義ファイルです。パッケージをビルドすると、ROS2 のコード生成の仕組み、rosidl が、定義ファイルから、Python のクラスと、C++ のクラス、つまり構造体を作ります。ノードは、それを import や include して使います。
 
-図は、左から右へ流れる図で、箱が4つあります。
+図は、左から右へ流れる図で、点線の枠が1つと、箱が4つあります。
 
-いちばん左は、点線で囲んだ、インターフェースのパッケージ、という枠です。中の箱に、msg の VehicleState.msg、srv の SetGains.srv、action の DriveDistance.action の3つのファイル名と、ament_cmake で作る、という注記が並びます。
+いちばん左は、点線の枠で、インターフェースのパッケージ、とあります。枠の中の箱に、msg の VehicleState.msg、srv の SetGains.srv、action の DriveDistance.action の3つのファイル名と、ament_cmake で作る、という注記が並びます。
 
 この箱から右へ矢印が出て、真ん中の箱に入ります。真ん中の箱は、colcon build の、rosidl_generate_interfaces で、コードを生成する、とあります。
 
 真ん中の箱からは、矢印が2本に分かれて、右の2つの箱に入ります。右上の箱は、Python のクラスで、learn_interfaces.msg、import して使う、とあります。右下の箱は、C++ のクラス、つまり構造体で、コロン2つでつないだ learn_interfaces の msg、include して使う、とあります。右の2つの箱の間には、同じ定義から作るので、言語が違ってもつながる、と書かれています。
 
-Python のノードと C++ のノードが、同じトピックで話せるのは、フェーズ3-1 の6節の内容ですが、両方が、同じ定義ファイルから作られたコードを使い、同じ形でデータを送るからです。標準の型も、std_msgs などのパッケージの中で同じように作られ、ROS2 と一緒にインストールされています。図の定義ファイルの名前は、6節で自作する例のものです。
+Python のノードと C++ のノードは、同じトピックで話せます。フェーズ3-1 の6節の内容です。そうできるのは、両方が、同じ定義ファイルから作られたコードを使い、同じ形でデータを送るからです。標準の型も、std_msgs などのパッケージの中で同じように作られ、ROS2 と一緒にインストールされています。図の定義ファイルの名前は、6節で自作する例のものです。
 
 ## 2. 定義ファイルの書き方
 
@@ -168,7 +168,7 @@ Python の list を渡しても、中では、array.array、つまり、同じ�
 
 コマンドは、ros2 interface show に、rcl_interfaces の msg の Log と、マイナス2つの no-comments を付けたものです。
 
-期待する結果は、先頭の抜粋が載っています。まず、uint8 の定数が5つ、DEBUG、INFO、WARN、ERROR、FATAL の順に、イコールで値を付けて並びます。続いて項目が、builtin_interfaces の Time 型の stamp、その中の int32 の sec と uint32 の nanosec、uint8 の level、string の name、string の msg、と並びます。
+期待する結果には、先頭の抜粋が載っています。まず、uint8 の定数が5つ、DEBUG、INFO、WARN、ERROR、FATAL の順に、イコールで値を付けて並びます。続いて項目が、builtin_interfaces の Time 型の stamp、その中の int32 の sec と uint32 の nanosec、uint8 の level、string の name、string の msg、と並びます。
 
 level には、Python なら Log.INFO、C++ なら、コロン2つでつないだ rcl_interfaces の msg の Log の INFO のように、定数の名前で値を入れられます。INFO の値の20を、数字のままコードに直接書くより、意味が読み取りやすい、とあります。
 
@@ -248,7 +248,7 @@ proto の表示は、前後のダブルクォートまで含めて、そのま�
 
 1つ目は、一般的な考え方です。意味の合う標準の型があれば、それを使います。標準の型なら、rqt_plot、ros2 bag、RViz などのツールや、ほかの人のパッケージが、そのまま扱えます。意味の合う型が無いときに、自作します。std_msgs の Float64 や String のような、値を1つ包んだだけの型は、どの項目も data という名前で、中身の意味、つまり何の値か、単位は何かを伝えません。8節の common_interfaces のリポジトリにある std_msgs の説明でも、試作には便利だが、長く使う型としては勧めない、とされています。
 
-2つ目は、この教材が Float64 を使った理由です。教材では、トピックとノードの仕組みを学ぶことを優先し、型は最も簡単なものにしました。目標速度、速度、ペダルを、別々の Float64 のトピックにしたので、rqt_plot で1本ずつ描けて、ros2 topic pub でも手で送りやすい。その代わり、値に時刻が無く、これは3-2節の話です。単位は、トピック名と手順書の説明に頼っています。
+2つ目は、この教材が Float64 を使った理由です。教材では、トピックとノードの仕組みを学ぶことを優先し、型は最も簡単なものにしました。目標速度、速度、ペダルを、別々の Float64 のトピックにしたので、rqt_plot で1本ずつ描けて、ros2 topic pub でも手で送りやすくなります。その代わり、値に時刻が無く、これは3-2節の話です。単位は、トピック名と手順書の説明に頼っています。
 
 3つ目は、実務の目安です。決まった組でしか意味を持たない値、例えば、ある時刻の目標速度、速度、ペダルなどは、1つの自作の型にまとめ、Header で時刻を付け、コメントに単位を書きます。ほかの人やツールと共有する値は、標準の型を優先します。位置なら geometry_msgs、センサの値なら sensor_msgs です。
 
@@ -270,7 +270,7 @@ proto の表示は、前後のダブルクォートまで含めて、そのま�
 
 手順は3つです。まず、ホームの ros2_ws の src に cd します。次に、ros2 pkg create で、ビルドの種類を ament_cmake、ライセンスを Apache-2.0、メンテナの名前を learner、メールをダミーのアドレスにして、learn_interfaces というパッケージを作ります。最後に、mkdir のマイナス p で、learn_interfaces の下に、msg、srv、action の3つのフォルダを作ります。
 
-期待する結果は、ros2 pkg create の分で、パスは環境によって変わる、とあります。まず、新しいパッケージを作る、という1行が出て、続いて設定の内容の確認が並びます。パッケージの名前は learn_interfaces、作成先はホームの ros2_ws の src、パッケージの形式は3、メンテナは learner、ライセンスは Apache-2.0、ビルドの種類は ament_cmake、依存は空です。その後に、learn_interfaces のフォルダ、package.xml、src と include のフォルダ、CMakeLists.txt を作った、という行が並びます。
+期待する結果は、ros2 pkg create の分で、パスは環境によって変わる、とあります。まず、新しいパッケージを作る、という1行が出て、続いて、コマンドで指定した設定の確認が、パッケージの名前、作成先、パッケージの形式、版数、説明、メンテナ、ライセンス、ビルドの種類、依存の順に並びます。パッケージの形式は3で、依存は空です。その後に、learn_interfaces のフォルダ、package.xml、src と include のフォルダ、CMakeLists.txt を作った、という行が並びます。
 
 フェーズ4 の3-1節の learn_bringup と、同じ作り方です。mkdir は、成功しても何も表示しません。src と、include の下の learn_interfaces は、雛形が作る空のフォルダで、このパッケージでは使いません。
 
@@ -326,7 +326,7 @@ colcon build では、learn_interfaces の Starting の行と、秒数付きの 
 
 ros2 interface package では、learn_interfaces の、msg の VehicleState、action の DriveDistance、srv の SetGains の3行が並びます。
 
-ros2 interface show では、6-2節で書いた VehicleState の定義が、コメントごと表示されます。そのうえで、header の下に、2-4節と同じく、stamp と、その中の sec と nanosec、そして frame_id が、字下げで出ます。
+ros2 interface show では、6-2節で書いた VehicleState の定義が表示され、header の行の下に、字下げの行がいくつか入ります。
 
 説明は3つです。
 
@@ -348,7 +348,7 @@ Python では、標準の型と同じく import します。setup.py は変え�
 
 期待する結果は2行です。1行目は、learn_interfaces.msg の VehicleState の中身で、header、target_velocity、velocity、pedal の順に並びます。header の中には、stamp の sec と nanosec と、frame_id があります。velocity と pedal は、渡した値です。2行目は、PEDAL_MAX の値、つまり6-2節で決めた値です。
 
-指定しなかった項目、つまり header と target_velocity は、既定の0や空の値で作られています。2-5節の話です。定数の PEDAL_MAX は、作ったメッセージではなく、型、つまりクラスから読めます。サービスとアクションは、from learn_interfaces.srv import SetGains と、from learn_interfaces.action import DriveDistance で読み込み、SetGains の Request に、kp が0.5、ki が0.1 を渡したり、DriveDistance の Goal に、distance が450.0 を渡したりして、要求やゴールを作ります。フェーズ3-4 と3-5 の、AddTwoInts の Request や、Fibonacci の Goal と同じ形です。
+指定しなかった項目、つまり header と target_velocity は、既定の0や空の値で作られています。2-5節の話です。定数の PEDAL_MAX は、作ったメッセージではなく、型、つまりクラスから読めます。サービスとアクションは、from learn_interfaces.srv import SetGains と、from learn_interfaces.action import DriveDistance で読み込み、SetGains の Request に、kp に0.5、ki に0.1 を入れて渡したり、DriveDistance の Goal に、distance に450.0 を入れて渡したりして、要求やゴールを作ります。フェーズ3-4 と3-5 の、AddTwoInts の Request や、Fibonacci の Goal と同じ形です。
 
 C++ では、ros2_ws の src の learn_cpp の CMakeLists.txt で、learn_interfaces を探す find_package に REQUIRED を付け、ament_target_dependencies に learn_interfaces を足します。フェーズ3-1 の4-2節で、talker に std_msgs を足したのと同じ形です。コードでは、ヘッダを include して、型名で使います。
 
@@ -362,19 +362,19 @@ C++ では、ros2_ws の src の learn_cpp の CMakeLists.txt で、learn_interf
 
 表は2列で、症状と、確認することです。7行あります。
 
-1行目。ビルドで、Velocity は無効な項目名で、決まったパターンに合わせるべきだ、というエラーが出る。確認することは、項目の名前が小文字で始まっているかで、2-6節の話です。
+1行目。ビルドで、Velocity は無効な項目名で、決まったパターンに合わせるべきだ、というエラーが出る場合は、項目の名前が小文字で始まっているかを確かめます。2-6節の話です。
 
-2行目。ビルドで、vehicle_state は無効なメッセージ名で、決まったパターンに合わせるべきだ、というエラーが出る。確認することは、定義ファイルの名前が、VehicleState.msg のように、大文字で始まる型名になっているかです。
+2行目。ビルドで、vehicle_state は無効なメッセージ名で、決まったパターンに合わせるべきだ、というエラーが出る場合は、定義ファイルの名前が、大文字で始まる型名になっているかを確かめます。例は VehicleState.msg です。
 
-3行目。ビルドで、定義の中の、別のパッケージの型が見つからない。確認することは、find_package、DEPENDENCIES、package.xml の depend の3か所に、そのパッケージ、例えば std_msgs などを書いたかです。
+3行目。ビルドで、定義の中の、別のパッケージの型が見つからない場合は、find_package、DEPENDENCIES、package.xml の depend の3か所に、そのパッケージ、例えば std_msgs などを書いたかを確かめます。
 
-4行目。定義ファイルを足したのに、ros2 interface package に出ない。確認することは、rosidl_generate_interfaces の並びに足したか、ビルドし直して、source で install の setup.bash を読み込んだかです。
+4行目。定義ファイルを足したのに、ros2 interface package に出ない場合は、rosidl_generate_interfaces の並びに足したか、ビルドし直して、source で install の setup.bash を読み込んだかを確かめます。
 
-5行目。Python で、learn_interfaces というモジュールが無い、というエラーが出る。確認することは、使う前に learn_interfaces をビルドして、source で install の setup.bash を読み込んだかです。
+5行目。Python で、learn_interfaces というモジュールが無い、というエラーが出る場合は、使う前に learn_interfaces をビルドして、source で install の setup.bash を読み込んだかを確かめます。
 
-6行目。定義を変えた後、ノードどうしがつながらない。確認することは、使う側のパッケージもビルドし直したかです。古い定義のままのノードと、新しい定義のノードは、同じ名前の型でも中身が違うので、正しくやり取りできません。
+6行目。定義を変えた後、ノードどうしがつながらない場合は、使う側のパッケージもビルドし直したかを確かめます。古い定義のままのノードと、新しい定義のノードは、同じ名前の型でも中身が違うので、正しくやり取りできません。
 
-7行目。ament_python のパッケージに msg のフォルダを作ったが、型が生成されない。確認することは、インターフェースは ament_cmake のパッケージでしか定義できない、ということで、6-1節の話です。
+7行目。ament_python のパッケージに msg のフォルダを作ったが、型が生成されない場合は、インターフェースは ament_cmake のパッケージでしか定義できない、ということを確かめます。6-1節の話です。
 
 ## 7. 教材のどこで何を使ったか
 
@@ -406,7 +406,7 @@ C++ では、ros2_ws の src の learn_cpp の CMakeLists.txt で、learn_interf
 
 ## 8. 公式ドキュメントと参考資料
 
-確認の状況が書かれています。2026年9月27日の時点で、公式のページは、GitHub にある原稿、つまり ros2 の ros2_documentation の jazzy のブランチが実在することを確かめた、とあります。docs.ros.org のページは、ボット対策で本文を取得できません。型の定義へのリンクは、raw.githubusercontent.com の同じパスが存在することを確かめました。REP 103 は、原稿の ros-infrastructure の rep が実在することを確かめた、とあります。
+確認の状況が書かれています。2026年9月27日の時点で、公式のページは、GitHub にある原稿、つまり ros2 の ros2_documentation の jazzy のブランチが実在することを確かめた、とあります。docs.ros.org のページは、ボット対策で本文を取得できません。型の定義へのリンクは、GitHub の、ファイルをそのまま返すアドレスで、同じパスが存在することを確かめました。REP 103 は、原稿の ros-infrastructure の rep が実在することを確かめた、とあります。
 
 公式の資料は6つです。
 
@@ -430,4 +430,4 @@ C++ では、ros2_ws の src の learn_cpp の CMakeLists.txt で、learn_interf
 
 原稿の中に原文の表記のまま書いたコマンドと、型・項目・関数の名前は、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。定義ファイルとコードは写さず、中身と役割を言葉で説明しました。
 
-原文の期待する結果には、ROS2 の標準の型の定義を表示したもの（定義の元は common_interfaces と rcl_interfaces で、Apache License 2.0）があります。この原稿では、その表示は写さず、型と項目の名前と入れ子の形だけを言葉で説明しました。原文では、文法と型の対応は、公式ドキュメント（CC BY 4.0）と手元のファイルから確かめ、自分の言葉でまとめたもの、としています。
+原文のうち、ros2 interface show の表示として載せた標準の型の定義は、[common_interfaces](https://github.com/ros2/common_interfaces) と [rcl_interfaces](https://github.com/ros2/rcl_interfaces)（どちらも Apache License 2.0）のものです。この原稿では、それを写さず、型と項目の名前と入れ子の形だけを言葉で説明しました。原文では、文法と型の対応を、[ROS 2 Documentation](https://docs.ros.org/en/jazzy/)（Open Robotics、[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)）の公式ドキュメントと手元のファイルから確かめ、自分の言葉でまとめたとしています。表示の例は、各ツールの表示を言葉で説明したものです。
