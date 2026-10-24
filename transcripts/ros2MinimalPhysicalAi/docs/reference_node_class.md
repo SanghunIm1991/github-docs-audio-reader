@@ -4,8 +4,8 @@
 原文のコミット: 86dc0ed3d606c4a05d1e087421bb10318a37e521（2026-10-14）
 作成: 2026-10-24、Claude Code が手作業で作成（原稿化スキルはまだない）
 原文のライセンス: 文章と図は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。原文にはサンプルコードも実行の手順も無く、本文に出てくるクラス・変数・メソッドの名前と短い呼び出しの例だけが Apache-2.0 の対象になりうる。原文の冒頭に、クラスの構造・変数名・メソッド名は ROS2 Jazzy のソースを読んで確かめたもので、文章は自分の言葉で書いており、ソースの転載ではない、とある。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
-方針: 英語の略語や製品名、クラス・変数・メソッドの名前は原文の表記のまま書く。名前の先頭のアンダースコアの数が意味を持つところ（_context と __node）だけ、「アンダースコアが2つの」と言い添えた。C++ のテンプレートの < > は「山括弧」と言った。2つの図（SVG）は、箱の並びと線の種類を言葉で説明した。表（変数の読み方、メソッドの分類、11個の部品、比較、教材のどこで何を使ったか）は言葉で説明し、値は全部読んだ。原文の手順書への参照（フェーズ3-1 の1節の図など）は、原文どおり言った。公式ドキュメントの節は、リンクの題名と括弧の説明を読んだ。文字数の上限は設けない
-省いたもの: URL、リンク先のファイル名、mermaid 版の図（SVG と同じ内容）、図の中の箱の座標と色の細部
+方針: 英語の略語や製品名、クラス・変数・メソッドの名前は原文の表記のまま書く。名前の先頭のアンダースコアの数が意味を持つ __node だけ、「アンダースコアが2つの」と言い添えた。C++ のテンプレートの < > は「山括弧」と言った。2つの図（SVG）は、箱の並びと線の種類を言葉で説明した。表（変数の読み方、メソッドの分類、11個の部品、比較、教材のどこで何を使ったか）は言葉で説明し、値は全部読んだ。原文の手順書への参照（フェーズ3-1 の1節の図など）は、原文どおり言った。公式ドキュメントの節は、リンクの題名と括弧の説明を読んだ。文字数の上限は設けない
+省いたもの: URL、リンク先のファイル名、String の型の定義へのリンク、mermaid 版の図（SVG と同じ内容で、折りたたみになっている）、図の中の箱の座標と色の細部、図の中のメソッドの引数と、変数の行の細部（Python の図の _subscriptions・_timers・_services・_clients など）
 -->
 
 # 参考資料: Node クラスの構造、Python 版と C++ 版のクラス図（聞くための原稿）
@@ -74,7 +74,7 @@ __init__ の中で作られる、主な変数を、図の上の段に載せた�
 
 4行目は _parameters です。中身は辞書です。宣言したパラメータの、名前と値です。
 
-5行目は _default_callback_group です。中身は MutuallyExclusiveCallbackGroup です。コールバックグループを指定しなかったときに使われるグループで、同じグループのコールバックは同時に動かさない、という種類です。既定のままなら、1つのノードの、タイマーや受信のコールバックは、1つずつ順に処理されます。なので、複数のコールバックが同じ変数を触っても食い違わない、理由の一部になります。例は、フェーズ3-4 の counter_node です。
+5行目は _default_callback_group です。中身は MutuallyExclusiveCallbackGroup です。コールバックグループを指定しなかったときに使われるグループで、同じグループのコールバックは同時に動かさない、という種類です。既定のままなら、1つのノードの、タイマーや受信のコールバックは、1つずつ順に処理されます。これが、複数のコールバックが同じ変数を触っても食い違わない理由の一部です。例は、フェーズ3-4 の counter_node です。
 
 このほか、__init__ では、ParameterService、つまり ros2 param の要求に答えるサービスの群れと、ROSClock、つまり get_clock が返す時計と、TimeSource、つまり use_sim_time を扱うものなども、作られます。自作のノードに ros2 param list を実行すると、フェーズ3-3 の5-3節のとおり、自分で宣言していない use_sim_time や start_type_description_service も並びます。これは、Node の __init__ が、これらを自動で用意しているからです。
 
@@ -84,7 +84,7 @@ __init__ の中で作られる、主な変数を、図の上の段に載せた�
 
 1行目は、通信の口を作る、です。代表的なメソッドは、create_publisher、create_subscription、create_timer、create_service、create_client、create_rate、create_guard_condition です。教材で使ったのは、最初の5つで、フェーズ3-1 から3-4 です。
 
-2行目は、通信の口を壊す、です。代表的なメソッドは、destroy_publisher、destroy_subscription、destroy_timer など、と、destroy_node です。教材で使ったのは destroy_node で、全部のフェーズの main の finally です。
+2行目は、通信の口を壊す、です。代表的なメソッドは、destroy_publisher、destroy_subscription、destroy_timer などと、destroy_node です。教材で使ったのは destroy_node で、全部のフェーズの main の finally です。
 
 3行目は、パラメータです。代表的なメソッドは、declare_parameter と declare_parameters、get_parameter と get_parameters、set_parameters、has_parameter、describe_parameter、add_on_set_parameters_callback、add_pre_set_parameters_callback、add_post_set_parameters_callback などです。教材で使ったのは、declare_parameter、get_parameter、add_on_set_parameters_callback で、フェーズ3-2b と3-3 です。
 
@@ -98,9 +98,9 @@ __init__ の中で作られる、主な変数を、図の上の段に載せた�
 
 まず、図の右の、Publisher、Subscription、Timer、Service、Client です。create_ で始まるメソッドが作って返すと同時に、ノード自身のリスト、_publishers などにも入れます。図のひし形は、ノードが持ち主として保持していることを表します。
 
-次に、図の左の Executor です。rclpy の spin に node を渡すと、内部で、Executor、指定しなければ既定のもの、に、add_node でノードを登録し、spin を回します。フェーズ3-5 で使った MultiThreadedExecutor は、Executor の子クラスの1つです。
+次に、図の左の Executor です。rclpy の spin に node を渡すと、内部で、Executor に、指定しなければ既定の Executor に、add_node でノードを登録し、spin を回します。フェーズ3-5 で使った MultiThreadedExecutor は、Executor の子クラスの1つです。
 
-次に、図の下の ActionServer と ActionClient です。Node には、create_action_server のようなメソッドはありません。アクションは、rclpy.action という別のモジュールのクラスで、作られるときに、node の add_waitable に self を渡して、ノードに自分を登録します。Waitable は、executor が待つことのできるもの、を表す基底クラスです。フェーズ3-5 で、ActionServer の最初の引数に、self、つまりノード自身を渡し、続けて Fibonacci と、fibonacci という名前を渡していたのは、このためです。
+次に、図の下の ActionServer と ActionClient です。Node には、create_action_server のようなメソッドはありません。アクションは、rclpy.action という別のモジュールのクラスで、作られるときに、node の add_waitable に self を渡して、ノードに自分を登録します。Waitable は、executor が待つことのできるもの、を表す基底クラスです。フェーズ3-5 で、ActionServer に、self、Fibonacci、fibonacci という名前の順に渡し、最初の引数にノード自身を渡していたのは、このためです。
 
 最後に、図の左下の CallbackGroup です。既定のグループを1つ持ちます。フェーズ3-5 の ReentrantCallbackGroup は、既定の代わりに指定した、別のグループです。
 
@@ -116,7 +116,7 @@ Python 版の Node は、機能を1つのクラスに集めた作りです。rcl
 
 真ん中の大きな箱が、rclcpp::Node です。中は3段で、名前の下の段に、変数が3行あります。1行目は、node_base_、node_topics_、node_timers_ など、2行目は、それが11個で、node_interfaces の何々 Interface の SharedPtr であること、3行目は、node_options_ で、型は NodeOptions です。その下の段に、メソッドが11行並びます。コンストラクタの、名前と NodeOptions を取る Node から始まり、山括弧で型を付けた create_publisher、create_subscription、それから create_wall_timer、山括弧で型を付けた create_service と create_client と declare_parameter、get_parameter、add_on_set_parameters_callback、get_logger と get_clock と now、そして最後が、get_node_base_interface などで、部品を返すもの、とあります。
 
-Node の箱の上には、自作のノード、Talker や Listener などの箱があります。中身は2行で、コンストラクタの Talker と、NodeOptions を取る Talker、こちらには間章と添えてあります。もう1行は、pub_、timer_、sub_ で、型は SharedPtr です。この箱から Node へ、継承の線が下りています。その右上には、std::enable_shared_from_this の箱があり、山括弧の中は Node です。中身は、自分を指す SharedPtr を作れる、とあります。Node の箱の上の辺から、この箱へも、継承の線が上がっています。
+Node の箱の上には、自作のノード、Talker や Listener などの箱があります。中身は2行で、コンストラクタの Talker と、NodeOptions を取る Talker、こちらには間章と添えてあります。もう1行は、pub_、timer_、sub_ で、型は SharedPtr です。この箱から Node へ、継承の線が下りています。Node の箱の右上、自作のノードの箱の右には、std::enable_shared_from_this の箱があり、山括弧の中は Node です。中身は、自分を指す SharedPtr を作れる、とあります。Node の箱の上の辺から、この箱へも、継承の線が上がっています。
 
 Node の右には、node_interfaces、つまり部品の箱があり、11個の部品の名前が縦に並びます。名前は3-1節の表で読みます。Node の側にひし形の付いた実線でつながり、11個を保持、処理を任せる、と書かれています。
 
@@ -154,13 +154,13 @@ C++ 版の Node が持つ変数、つまり private の部分は、ほとんど�
 
 10行目は NodeWaitablesInterface です。担当は、Waitable、つまりアクションなどの登録です。rclcpp_action の create_server が使います。
 
-11行目は NodeTypeDescriptionsInterface です。担当は、メッセージの型の説明を返すサービスで、Jazzy で入った機能です。直接は呼びません。ros2 param list に出る start_type_description_service が、この機能の有効と無効です。
+11行目は NodeTypeDescriptionsInterface です。担当は、メッセージの型の説明を返すサービスで、Jazzy で入った機能です。直接は呼びません。ros2 param list に出る start_type_description_service が、この機能を有効にするか無効にするかを決めます。
 
 get_node_base_interface のように、部品そのものを取り出すメソッドも、公開されています。自作のコードで使うことはまれですが、ROS2 の側では多用されます。例えば、フェーズ3-5 の、rclcpp_action の create_server に this を渡す呼び出しは、中で、ノードから、get_node_base_interface、get_node_clock_interface、get_node_logging_interface、get_node_waitables_interface の4つを取り出して、アクションのサーバを組み立てています。Python 版で add_waitable を呼んでいたことに当たる処理が、C++ では、必要な部品だけを取り出して渡す形になっています。
 
 ### 3-2. テンプレートのメソッド
 
-山括弧で std_msgs の msg の String を付けて、chatter と 10 を渡す create_publisher のように、メッセージの型を山括弧で渡すメソッドは、C++ のテンプレートです。原文には、String の型の定義へのリンクが付いています。Python 版では、create_publisher に、String、chatter、10 と渡し、型を普通の引数にしていました。テンプレートにすることで、コンパイルの時点で型が決まり、publish に違う型のメッセージを渡すと、コンパイルのエラーになります。フェーズ3-1 の7節の、実行時エラーの出方、の内容です。山括弧で std::string を付けた declare_parameter も同じで、宣言と同時に、型の決まった値を返します。
+山括弧で std_msgs の msg の String を付けて、chatter と 10 を渡す create_publisher のように、メッセージの型を山括弧で渡すメソッドは、C++ のテンプレートです。Python 版では、create_publisher に、String、chatter、10 と渡し、型を普通の引数にしていました。テンプレートにすることで、コンパイルの時点で型が決まり、publish に違う型のメッセージを渡すと、コンパイルのエラーになります。フェーズ3-1 の7節の、実行時エラーの出方、の内容です。山括弧で std::string を付けた declare_parameter も同じで、宣言と同時に、型の決まった値を返します。
 
 ### 3-3. SharedPtr で返し、呼び出し側が持ち続ける
 
@@ -170,7 +170,7 @@ Node は、作った Subscription や Timer などを、自分では持ち続け
 
 そのため、呼び出し側が、戻り値の SharedPtr を捨てると、参照の数が0になって、Subscription やタイマーは消え、コールバックは二度と呼ばれません。エラーも出ません。
 
-フェーズ3-1 の C++ の版で、pub_、timer_、sub_ を必ずメンバ変数に保持していたのは、このためです。フェーズ3-3 の add_on_set_parameters_callback の戻り値、つまり OnSetParametersCallbackHandle の SharedPtr を保持しないと、コールバックの登録が外れます。フェーズ3-3 の7節の比較表と、8節のつまずきの表の内容で、これも同じ仕組みによります。
+フェーズ3-1 の C++ の版で、pub_、timer_、sub_ を必ずメンバ変数に保持していたのは、このためです。フェーズ3-3 の add_on_set_parameters_callback の戻り値、つまり OnSetParametersCallbackHandle の SharedPtr を保持しないと、コールバックの登録が外れます。これも同じ仕組みによるもので、フェーズ3-3 の7節の比較表と、8節のつまずきの表の内容です。
 
 ### 3-4. NodeOptions と enable_shared_from_this
 
@@ -184,7 +184,7 @@ std::enable_shared_from_this は、山括弧の中が Node で、Node の親ク�
 
 1行目は、クラスの作りです。Python は、1つのクラスに機能を集め、重い処理は C 拡張の __node に任せます。C++ は、11個の部品、node_interfaces を組み合わせ、処理を任せます。
 
-2行目は、親クラスです。Python は、無しで、Python の object だけです。C++ は、std::enable_shared_from_this です。
+2行目は、親クラスです。Python は、親クラスは無く、Python の object だけです。C++ は、std::enable_shared_from_this で、山括弧の中は Node です。
 
 3行目は、作った通信の口の保持です。Python は、ノードが自分のリストで持ち続け、保持しなくても動きます。C++ は、呼び出し側が SharedPtr で持ち続ける必要があり、持たないと消えます。
 
@@ -226,11 +226,11 @@ std::enable_shared_from_this は、山括弧の中が Node で、Node の親ク�
 
 12行目は、後片付けです。Python は destroy_node。C++ は、SharedPtr が消えるときに自動です。手順書は3-1 から後です。
 
-教材で使ったのは、Node の機能のうち、通信の口を作る、パラメータ、ログと時計、の3つの分類がほとんどです。グラフの問い合わせ、つまり2-2節の表の5行目や、個別の destroy_ で始まるメソッド、create_rate などは使っていません。必要になったら、6節の公式の API リファレンスで、2-2節の表の分類を手がかりに探すとよい、とあります。
+教材で使ったのは、Node の機能のうち、通信の口を作る、パラメータ、ログと時計、の3つの分類がほとんどです。グラフの問い合わせ、つまり2-2節の表にある分類や、個別の destroy_ で始まるメソッド、create_rate などは使っていません。必要になったら、6節の公式の API リファレンスで、2-2節の表の分類を手がかりに探すとよい、とあります。
 
 ## 6. 公式ドキュメントと参考資料
 
-確認の状況が書かれています。2026年9月24日の時点で、下の URL は、Web 検索の結果で実在を確かめました。docs.ros.org は、本文の取得がボット対策で拒否されるため、内容の照合はできていません。ページに表示される版の番号、例えば rclpy の 3.2.1 などは、この資料で読んだ手元のパッケージの版、つまり rclpy の 7.1.12 と、rclcpp の 28.1.22 とは一致しません。構造は、手元のソースを正とした、とあります。
+確認の状況が書かれています。2026年9月24日の時点で、下の資料は、Web 検索の結果で実在を確かめました。docs.ros.org は、本文の取得がボット対策で拒否されるため、内容の照合はできていません。ページに表示される版の番号、例えば rclpy の 3.2.1 などは、この資料で読んだ手元のパッケージの版、つまり冒頭の対象に書いた版とは一致しません。構造は、手元のソースを正とした、とあります。
 
 資料は4つです。
 
