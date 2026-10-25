@@ -3,7 +3,7 @@
 原文: SanghunIm1991/ros2MinimalPhysicalAi の main ブランチの docs/tips.md のうち、3節（SetuptoolsDeprecationWarning の意味）。あわせて、冒頭の説明、項目の一覧の3節の行、期待する結果の出どころと出どころのうち3節に関わる部分、15節の参考資料のうち3節に関わるもの
 原文のコミット: 56e5e3044ad955d0b57c9300d1f03f2306cc64ae（2026-10-17）
 作成: 2026-10-25、Claude Code が手作業で作成（原稿化スキルはまだない）
-原文のライセンス: 文章は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。3-1節で引用している警告の文面は setuptools の出力で MIT License（LICENSE の「第三者の著作物」にある）。この原稿では警告の文面を写さないので、MIT の許諾の文の全文は入れていない。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
+原文のライセンス: 文章は CC BY 4.0、コードとコマンドは Apache-2.0（それぞれ LICENSE の2と1）。3-1節で引用している警告の文面は setuptools の出力で MIT License（LICENSE の「第三者の著作物」にある）。3節のブロックは警告の文面だけで、原文の表記のまま書いたコマンドは、本文の中に書かれたもの。この原稿では警告の文面を写さないので、MIT の著作権表示と許諾の文の全文は入れていない。この原稿は、原文を聞くために要約・意訳したもの（改変あり）
 方針: Tips集は、テーマごとに docs/tips/ に番号を付けて分ける（2026-10-19 にユーザーが決定）。1つのテーマだけを聞いても分かるよう、頭に Tips集の冒頭の説明と、このテーマの関係する手順書・出どころを置き、末尾に、このテーマの参考資料を置く（01_use_sim_time.md と同じ形）。英語の略語や製品名、警告・コマンド・ファイル・項目の名前は原文の表記のまま書く。オプションの - は「マイナス」と読む。3-1節の警告の文面は写さず、期待する結果の側では、何行目に何が出るかの骨組みだけを言い、内容は原文の説明の側で1回だけ読んだ。3-2節の、colcon が python3 に渡す2つの マイナス W の指定は、引数を写さず、どの文言で始まる警告を無視する指定かを言葉で説明した。参考資料は、リンクの題名と括弧の説明を読んだ。文字数の上限は設けない
 省いたもの: URL、冒頭の対象のうち14節の SB3 の版、期待する結果の出どころと出どころのうち、ほかの節に関わる部分、項目の一覧のほかの節の行、15節の参考資料のうち、ほかの節に関わるものと、その確認状況、15節の出典の注記のうち、ほかの節に関わる部分、3-1節の警告の文面（英文と、勧めている道具の名前の pypa の build と installer）、python3 setup.py の後の省略の記号、3-2節の マイナス W の引数の文字の並び
 -->
@@ -46,7 +46,7 @@ DeprecationWarning は、非推奨の警告です。今は動くが、将来の�
 
 この使い方を変えるのは、colcon と ROS2 の側の仕事で、パッケージを書く側が直せるものではありません。ROS2 Jazzy の組み合わせでは、この使い方で、ビルドが正しくできます。だから、ビルドが成功していれば、無視してよい、とあります。
 
-実際には、colcon 自身が、この2つの警告を表示しないようにしています。colcon は python3 を、マイナス W の指定を2つ付けて実行しています。1つは、setup.py install が非推奨だという文言で始まる警告を無視する指定、もう1つは、easy_install のコマンドが非推奨だという文言で始まる警告を無視する指定です。マイナス W に ignore と文言を渡すのは、その文言で始まる警告を表示しない、という Python の指定です。Ubuntu 24.04 のパッケージ、つまり colcon-core 0.21.3 と setuptools 68.1.2 の組み合わせで、フェーズ2 の2つのパッケージを、colcon build マイナス2つの symlink-install でビルドしたところ、警告は1行も出なかった、とあります。
+実際には、colcon 自身が、この2つの警告を表示しないようにしています。colcon は python3 を、マイナス W の指定を2つ付けて実行しています。1つは、setup.py install が非推奨だという文言で始まる警告を無視する指定、もう1つは、easy_install のコマンドが非推奨だという文言で始まる警告を無視する指定です。マイナス W に、ignore、コロン、文言、の形で渡すのは、その文言で始まる警告を表示しない、という Python の指定です。Ubuntu 24.04 のパッケージ、つまり colcon-core 0.21.3 と setuptools 68.1.2 の組み合わせで、フェーズ2 の2つのパッケージを、colcon build マイナス2つの symlink-install でビルドしたところ、警告は1行も出なかった、とあります。
 
 それでも警告を見かけることがあるのは、主に次の2つの場合です。
 
@@ -66,6 +66,6 @@ DeprecationWarning は、非推奨の警告です。今は動くが、将来の�
 
 この原稿は、SanghunIm1991 さんの [ros2MinimalPhysicalAi の「Tips集: 手順書の本文に入れなかった小さな補足」](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/tips.md)のうち、3節を、聞くために要約・意訳したものです。元にしたのは、[2026年10月17日の版](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/56e5e3044ad955d0b57c9300d1f03f2306cc64ae/docs/tips.md)です。原文の文章と同じく、[クリエイティブ・コモンズ 表示 4.0 国際ライセンス](https://creativecommons.org/licenses/by/4.0/deed.ja)で提供します。
 
-原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。
+原稿の中に原文の表記のまま書いたコマンドは、原文では [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。3節のブロックは次の段落の警告の文面だけで、原文の表記のまま書いたコマンドは、本文の中に書かれたものです。
 
-原文の3-1節で引用している警告の文面は、[setuptools](https://github.com/pypa/setuptools)（MIT License）の出力です。この原稿では、その文面を写さず、何が書かれているかを言葉で説明しました。原文では、参考資料に、警告文に出てくる Paul Ganssle さんの解説記事を挙げています。表示の例は、各ツールの表示を言葉で説明したものです。
+原文の3-1節で引用している警告の文面は、[setuptools](https://github.com/pypa/setuptools)（MIT License）の出力です。この原稿では、その文面を写さず、何が書かれているかを言葉で説明しました。原文では、参考資料に、警告文に出てくる Paul Ganssle さんの解説記事を挙げています。
