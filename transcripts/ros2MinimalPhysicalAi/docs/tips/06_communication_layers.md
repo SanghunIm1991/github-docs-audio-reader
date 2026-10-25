@@ -22,7 +22,7 @@ Tips集は、手順書、つまりフェーズの本文に入れると流れが�
 
 ## 6. ROS2 の通信の層を詳しく
 
-フェーズ0 の2節では、ROS2 の通信が、層を積み重ねた構造、つまりプロトコルスタックになっていることだけを説明しました。ここでは、その図に出てきた各層と、関係する仕組みの名前を補います。取り上げるのは4つです。
+フェーズ0 の2節では、ROS2 の通信が、層を積み重ねた構造、つまりプロトコルスタックになっていることだけを説明しました。ここでは、フェーズ0 の2節の図に出てきた各層と、関係する仕組みの名前を補います。取り上げるのは4つです。
 
 1つ目は、DDS、Data Distribution Service です。OMG、つまり Object Management Group という標準化団体が定めた、分散型の publish と subscribe の通信の規格です。ROS2 は、この DDS、正確には、その通信規約の DDS/RTPS を、標準の通信層として使っています。
 
@@ -40,4 +40,4 @@ ROS2 と一緒に入るのは、既定の Fast DDS 向けの RMW、つまり rmw
 
 原文のコードとコマンドは、[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) の対象です。ライセンスの全文は、原文のリポジトリの [LICENSE-APACHE-2.0](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/LICENSE-APACHE-2.0) にあります。6節にはコードのブロックがなく、原稿に原文の表記のまま書いたパッケージと環境変数の名前は、本文の中に書かれたものです。
 
-原文の6節には、第三者の著作物の引用はありません。6節が基にした ROS2 と DDS の公式ページは、原文の [フェーズ0 の手順書](https://github.com/SanghunIm1991/ros2MinimalPhysicalAi/blob/main/docs/phase0_overview.md)の10節に挙げられています。
+原文の6節には、第三者の著作物の引用はありません。原文では、6節を、[ROS 2 Documentation](https://docs.ros.org/en/jazzy/)（Open Robotics、[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)）などの公式ページの記載に基づいて書いたとしています。
